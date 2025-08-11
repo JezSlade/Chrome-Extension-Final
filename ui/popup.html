@@ -3,34 +3,59 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>My Awesome Tool</title>
+    <title>ToolForge Popup</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header class="bar">
       <img src="../assets/icon48.png" class="logo" alt="logo" />
-      <h1>My Awesome Tool</h1>
+      <h1>ToolForge</h1>
     </header>
 
-    <main class="main">
-      <div class="row">
-        <label class="switch">
-          <input id="enabled" type="checkbox" />
-          <span class="slider"></span>
-        </label>
-        <span id="statusLabel">Enabled</span>
+    <main class="main glass">
+      <div class="row between">
+        <div class="row">
+          <label class="switch">
+            <input id="enabledToggle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+          <span id="statusLabel" class="status">Enabled</span>
+        </div>
+        <div id="expCount" class="small">0 expansions • 0 forms • 0 vars</div>
+      </div>
+
+      <div class="row between">
+        <label for="storageArea">Storage</label>
+        <select id="storageArea">
+          <option value="sync">Sync (Google Account)</option>
+          <option value="local">Local (This Device)</option>
+        </select>
+      </div>
+
+      <div class="row between">
+        <label for="autoSync">Auto-sync</label>
+        <input id="autoSync" type="checkbox" />
       </div>
 
       <div class="row">
-        <span id="expCount">0 expansions</span>
+        <a class="btn" id="openManager" href="#">Open Manager</a>
+        <a class="btn secondary" id="syncPush" href="#">Push</a>
+        <a class="btn secondary" id="syncPull" href="#">Pull</a>
       </div>
 
-      <div class="row">
-        <button id="openManager" class="btn">Open Manager</button>
-        <button id="reloadTab" class="btn">Reload Tab</button>
+      <hr />
+
+      <div class="small">
+        Tip: Use triggers like <code>:date</code>. Variables such as <code>{{date}}</code> are supported.
       </div>
     </main>
 
     <script src="popup.js"></script>
   </body>
 </html>
+<!--
+CHANGELOG
+2025-08-11 v1.5.0
+- Renamed header to ToolForge
+- Applied glass class to main
+-->

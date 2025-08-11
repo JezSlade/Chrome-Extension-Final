@@ -1,0 +1,117 @@
+ai_prompt_engine:
+  name: "Stock Forecast Prompt Orchestrator"
+  description: "Modular AI system for generating dynamic, context-aware prompts for short-term trading forecasts."
+
+  features:
+
+    prompt_templates:
+      description: "Reusable prompt scaffolds with dynamic fields."
+      structure:
+        - id: forecast_prompt
+          system: "You are a market analyst specializing in short-term trading."
+          user: |
+            Analyze the following setup:
+            - Ticker: {ticker}
+            - Price Range: {price_range}
+            - Float Size: {float_size}
+            - Industry: {industry}
+            - Momentum Indicators: {momentum_indicators}
+            - Trade Type: {trade_type}
+            - Recent Catalyst: {catalyst}
+            - Risk Level: {risk_profile}
+            - Time Horizon: {time_horizon}
+            Provide a forecast with entry/exit zones, sentiment bias, and catalyst likelihood.
+
+    dynamic_fields:
+      description: "Form-driven input system for populating prompt variables."
+      fields:
+        ticker: {type: string}
+        price_range: {type: range, default: "2–10"}
+        float_size: {type: enum, values: ["ultra-low", "low", "mid", "high"]}
+        industry: {type: enum, values: ["biotech", "tech", "energy", "finance"]}
+        momentum_indicators: {type: list, values: ["RSI", "MACD", "Volume Spike", "VWAP Divergence"]}
+        trade_type: {type: enum, values: ["swing", "scalp", "long-term"]}
+        catalyst: {type: string, optional: true}
+        risk_profile: {type: enum, values: ["low", "moderate", "high"]}
+        time_horizon: {type: enum, values: ["intraday", "1–3 days", "1 week"]}
+
+    modules:
+      description: "Composable prompt logic units for chaining and analysis."
+      list:
+        - id: trend_analysis
+          purpose: "Identify technical and macro trends."
+          input: [ticker, industry]
+          output: trend_summary
+
+        - id: catalyst_prediction
+          purpose: "Estimate likelihood and impact of near-term catalysts."
+          input: [ticker, catalyst, float_size, industry]
+          output: catalyst_summary
+
+        - id: edge_case_filter
+          purpose: "Detect false breakouts, low liquidity traps, and sentiment saturation."
+          input: [ticker, float_size, momentum_indicators]
+          output: risk_flags
+
+        - id: multi_view_forecast
+          purpose: "Generate bullish, bearish, and neutral perspectives."
+          input: [ticker, trend_summary, catalyst_summary, risk_flags]
+          output: forecast_views
+
+        - id: summary_output
+          purpose: "Create a concise summary for reporting or social media."
+          input: [forecast_views]
+          output: markdown_summary
+
+    execution:
+      description: "Prompt execution and output formatting."
+      options:
+        dry_run: true
+        output_format: ["markdown", "plaintext", "json"]
+        api_provider: "OpenAI"
+        model: "gpt-4"
+        temperature: 0.7
+        max_tokens: 1200
+
+    edge_case_handling:
+      description: "Built-in logic to detect and mitigate unreliable setups."
+      checks:
+        - low_liquidity
+        - false_breakout
+        - sector_noise
+        - sentiment_overload
+        - overextended_rsi
+
+    perspectives:
+      description: "Multi-angle analysis to reduce bias."
+      views:
+        - bullish_analyst
+        - bearish_risk_manager
+        - neutral_quant_model
+        - retail_sentiment_summary
+
+    presets:
+      description: "Preconfigured prompt modules for common setups."
+      examples:
+        - name: "Low Float Biotech Swing"
+          fields:
+            price_range: "2–5"
+            float_size: "ultra-low"
+            industry: "biotech"
+            trade_type: "swing"
+            momentum_indicators: ["Volume Spike", "RSI"]
+            catalyst: "Upcoming FDA decision"
+            risk_profile: "high"
+            time_horizon: "1–3 days"
+
+        - name: "Tech Earnings Play"
+          fields:
+            price_range: "50+"
+            float_size: "mid"
+            industry: "tech"
+            trade_type: "swing"
+            momentum_indicators: ["MACD", "VWAP Divergence"]
+            catalyst: "Earnings report in 2 days"
+            risk_profile: "moderate"
+            time_horizon: "1 week"
+

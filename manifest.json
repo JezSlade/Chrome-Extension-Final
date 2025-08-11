@@ -1,15 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "My Awesome Tool",
-  "description": "Espanso-style text expansion with a built-in manager UI.",
-  "version": "1.1.0",
+  "name": "ToolForge - Text Expander and Prompt Builder",
+  "description": "ToolForge: Text expansion, drag-and-drop Form Builder, and AI Prompt Engineer with a library of Expansions, Forms, Variables, and Prompts.",
+  "version": "1.5.0",
   "action": {
-    "default_title": "My Awesome Tool",
+    "default_title": "ToolForge",
     "default_popup": "ui/popup.html"
   },
-  "background": {
-    "service_worker": "background.js"
-  },
+  "background": { "service_worker": "background.js" },
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",
@@ -18,10 +16,8 @@
   "permissions": [
     "storage",
     "scripting",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "<all_urls>"
+    "activeTab",
+    "contextMenus"
   ],
   "content_scripts": [
     {
@@ -30,17 +26,16 @@
       "run_at": "document_idle"
     }
   ],
-  "options_ui": {
-    "page": "ui/manager.html",
-    "open_in_tab": true
-  },
+  "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
       "resources": [
         "ui/manager.html",
         "ui/manager.css",
         "ui/manager.js",
-        "ui/popup.css"
+        "ui/popup.css",
+        "ai/ai_persona.yaml",
+        "ai/ai_prompt_engine.yaml"
       ],
       "matches": ["<all_urls>"]
     }

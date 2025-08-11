@@ -1,637 +1,205 @@
-(function () {
-  // Utilities
-  const qs = (s, r = document) => r.querySelector(s);
-  const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
-
-  function notify(msg) {
-    const box = document.createElement("div");
-    box.className = "notice";
-    box.textContent = msg;
-    document.body.appendChild(box);
-    requestAnimationFrame(() => box.classList.add("show"));
-    setTimeout(() => { box.classList.remove("show"); setTimeout(() => box.remove(), 220); }, 2200);
-  }
-
-  function fmtDate(fmt) {
-    const d = new Date();
-    const pad = (n, w = 2) => String(n).padStart(w, "0");
-    return (fmt || "%Y-%m-%d").replace(/%Y/g, String(d.getFullYear())).replace(/%m/g, pad(d.getMonth() + 1)).replace(/%d/g, pad(d.getDate())).replace(/%H/g, pad(d.getHours())).replace(/%M/g, pad(d.getMinutes())).replace(/%S/g, pad(d.getSeconds()));
-  }
-
-  function buildVarMap(vars) {
-    const map = {};
-    for (const v of vars) {
-      if (!v || !v.name) continue;
-      if (v.type === "date") map[v.name] = fmtDate(v.default || "%Y-%m-%d");
-      else map[v.name] = v.default || "";
+(function(){
+  // =============================
+  // DOM helpers
+  // =============================
+  const app = document.getElementById('app');
+  function el(tag, attrs = {}, ...children){
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)){
+      if (k === 'class') e.className = v;
+      else if (k === 'html') e.innerHTML = v;
+      else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2).toLowerCase(), v);
+      else e.setAttribute(k, v);
     }
-    map.date = fmtDate("%Y-%m-%d");
-    map.time = fmtDate("%H:%M:%S");
-    return map;
+    for (const c of children){ if (c == null) continue; e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); }
+    return e;
   }
 
-  function applyVars(text, varMap) {
-    const map = varMap || {};
-    return String(text || "").replace(/\{\{(\w+)\}\}/g, (_, k) => (k in map ? String(map[k]) : `{{${k}}}`));
-  }
+  async function rpc(type, payload){ const res = await chrome.runtime.sendMessage({ type, ...payload }); if (!res || !res.ok) throw new Error(res && res.error || 'RPC failed'); return res; }
 
+  // =============================
   // State
-  const state = {
-    activeTab: "composer",
+  // =============================
+  let state = {
+    tab: (location.hash && location.hash.slice(1)) || 'expansions',
     expansions: [],
-    forms: [],
     variables: [],
-    config: {},
-    currentExpansion: { trigger: "", type: "text", replacement: "", category: "", notes: "", formId: "" },
-    selectedFormId: null
+    forms: [],
+    prompts: [],
+    menu: null,
+    filter: '',
+    toast: null,
+    selectedFormId: null,
+    contextMenu: { open: false, x: 0, y: 0, items: [] },
   };
+  function setState(p){ state = Object.assign({}, state, p); render(); }
+  function showToast(t){ setState({ toast: t }); setTimeout(()=> setState({ toast: null }), 1800); }
 
-  // Storage helpers
-  async function loadAll() {
-    const res = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-    const data = res?.data || {};
-    state.expansions = Array.isArray(data.expansions) ? data.expansions : [];
-    state.forms = Array.isArray(data.forms) ? data.forms : [];
-    state.variables = Array.isArray(data.variables) ? data.variables : [];
-    state.config = data.config || {};
-    updateCounts();
+  // =============================
+  // Load
+  // =============================
+  async function load(){
+    const st = await rpc('GET_STATE');
+    const pr = await rpc('LIST_PROMPTS');
+    const menu = await rpc('GET_MENU');
+    setState({
+      expansions: st.data.expansions||[],
+      variables: st.data.variables||[],
+      forms: st.data.forms||[],
+      prompts: pr.items||[],
+      menu: menu.menu||null
+    });
   }
 
-  function persist(partial = {}) {
-    const payload = {
-      expansions: state.expansions,
-      forms: state.forms,
-      variables: state.variables,
-      config: state.config,
-      ...partial
-    };
-    chrome.runtime.sendMessage({ type: "SET_STATE", payload });
-    updateCounts();
-  }
+  // =============================
+  // Helpers
+  // =============================
+  function applyFilter(list){ const q = state.filter.trim().toLowerCase(); if (!q) return list; return list.filter(x => JSON.stringify(x).toLowerCase().includes(q)); }
+  const uid = () => Math.floor(Math.random()*1e9);
 
-  function updateCounts() {
-    const txt = `Expansions: ${state.expansions.length} • Forms: ${state.forms.length} • Vars: ${state.variables.length}`;
-    const el = qs("#statusCounts");
-    if (el) el.textContent = txt;
-  }
+  // =============================
+  // CRUD wrappers
+  // =============================
+  async function addExpansion(){ const { id } = await rpc('ADD_EXPANSION', { item: { trigger: ':new', replacement: 'New expansion', type: 'text' } }); await load(); showToast('Added'); }
+  async function updateExpansion(id, patch){ await rpc('UPDATE_EXPANSION', { id, patch }); await load(); showToast('Saved'); }
+  async function deleteExpansion(id){ await rpc('DELETE_EXPANSION', { id }); await load(); showToast('Deleted'); }
 
+  async function addVariable(){ const { id } = await rpc('ADD_VARIABLE', { item: { name: 'newVar', type: 'formatDate', default: '%Y-%m-%d' } }); await load(); setState({ tab: 'variables' }); showToast('Added'); }
+  async function updateVariable(id, patch){ await rpc('UPDATE_VARIABLE', { id, patch }); await load(); showToast('Saved'); }
+  async function deleteVariable(id){ await rpc('DELETE_VARIABLE', { id }); await load(); showToast('Deleted'); }
+
+  async function addForm(){ const { id } = await rpc('ADD_FORM', { item: { name: 'New Form', description: '', fields: [] } }); await load(); setState({ tab: 'forms', selectedFormId: id }); showToast('Added'); }
+  async function updateForm(id, patch){ await rpc('UPDATE_FORM', { id, patch }); await load(); showToast('Saved'); }
+  async function deleteForm(id){ await rpc('DELETE_FORM', { id }); await load(); showToast('Deleted'); }
+
+  async function addPrompt(item){ const { id } = await rpc('ADD_PROMPT', { item }); await load(); setState({ tab: 'prompts' }); showToast('Saved'); return id; }
+  async function updatePrompt(id, patch){ await rpc('UPDATE_PROMPT', { id, patch }); await load(); showToast('Saved'); }
+  async function deletePrompt(id){ await rpc('DELETE_PROMPT', { id }); await load(); showToast('Deleted'); }
+
+  async function setMenu(menu){ await rpc('SET_MENU', { menu }); await load(); showToast('Menu updated'); }
+
+  // =============================
+  // Builder interactions (DnD + context menu)
+  // =============================
+  const PALETTE = [
+    { type: 'text', label: 'Text' },
+    { type: 'textarea', label: 'Paragraph' },
+    { type: 'number', label: 'Number' },
+    { type: 'date', label: 'Date' },
+    { type: 'select', label: 'Select' }
+  ];
+  function onDragStart(e, payload){ e.dataTransfer.setData('application/x-toolforge', JSON.stringify(payload)); e.dataTransfer.effectAllowed = 'copy'; }
+  function onDropField(e, form){ e.preventDefault(); const d = e.dataTransfer.getData('application/x-toolforge'); if (!d) return; const p = JSON.parse(d); const f = { id: uid(), type: p.type, label: p.label + ' Field', key: 'field_'+Math.random().toString(36).slice(2,7), required: false, options: [], default: '' }; form.fields.push(f); updateForm(form.id, { fields: form.fields }); }
+  function onDragOver(e){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+  function moveField(form, fromId, toId){ if (fromId === toId) return; const iFrom = form.fields.findIndex(f=>f.id===fromId); const iTo = form.fields.findIndex(f=>f.id===toId); if (iFrom<0 || iTo<0) return; const [f] = form.fields.splice(iFrom, 1); form.fields.splice(iTo, 0, f); updateForm(form.id, { fields: form.fields }); }
+
+  // Custom context menu
+  function openContextMenu(x, y, items){ const menu = document.getElementById('contextMenu'); const list = document.getElementById('contextMenuItems'); list.innerHTML = ''; for (const it of items){ list.appendChild(el('li', { onclick: ()=>{ it.onClick(); closeContextMenu(); } }, it.label)); } menu.style.left = x+'px'; menu.style.top = y+'px'; menu.classList.remove('hidden'); setState({ contextMenu: { open:true, x, y, items } }); }
+  function closeContextMenu(){ const menu = document.getElementById('contextMenu'); menu.classList.add('hidden'); setState({ contextMenu: { open:false, x:0, y:0, items:[] } }); }
+  document.addEventListener('click', closeContextMenu);
+  document.addEventListener('contextmenu', (e)=>{ if (!e.target.closest('.builder, .list')) return; e.preventDefault(); });
+
+  // =============================
   // Tabs
-  function setPanel(id) {
-    state.activeTab = id;
-    qsa(".panel").forEach(p => p.classList.toggle("active", p.getAttribute("data-panel") === id));
-    qsa(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
-    const title = {
-      composer: "Expansions",
-      forms: "Forms",
-      variables: "Variables",
-      library: "Library",
-      config: "Configuration",
-      "import-export": "Import or Export"
-    }[id] || "Dashboard";
-    qs("#panelTitle").textContent = title;
-  }
+  // =============================
+  function Nav(){ const Tab = (id, label) => el('div', { class:'tab'+(state.tab===id?' active':''), onclick: ()=>{ setState({ tab:id }); location.hash = id; } }, label); return el('div', { class:'nav' }, Tab('expansions','Expansions'), Tab('variables','Variables'), Tab('forms','Forms'), Tab('prompts','Prompts'), Tab('settings','Settings'), Tab('help','Help')); }
+  function Toolbar(){ return el('div', { class:'row between' }, el('input', { class:'input', placeholder:'Filter...', value: state.filter, oninput:(e)=> setState({ filter: e.target.value }) }), el('div', { class:'row' }, el('button', { class:'btn', onclick:addExpansion }, 'Add Expansion'), el('button', { class:'btn secondary', onclick:addVariable }, 'Add Variable'), el('button', { class:'btn secondary', onclick:addForm }, 'Add Form')) ); }
 
-  // Render - Expansions
-  function renderExpansions() {
-    // Fill form select in expansion editor
-    const formSel = qs("#expFormId");
-    formSel.innerHTML = "";
-    for (const f of state.forms) {
-      const opt = document.createElement("option");
-      opt.value = String(f.id);
-      opt.textContent = f.name || `Form ${f.id}`;
-      formSel.appendChild(opt);
-    }
+  // Expansions
+  function ListExpansions(){ const items = applyFilter(state.expansions); return el('div', { class:'grid cols-2 list' }, ...items.map(CardExpansion)); }
+  function CardExpansion(it){ const cmItems = [ { label:'Edit', onClick: ()=>{} }, { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: it.trigger+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); await load(); } }, { label:'Delete', onClick: ()=> deleteExpansion(it.id) } ]; return el('div', { class:'card', oncontextmenu:(e)=> openContextMenu(e.pageX, e.pageY, cmItems) }, el('div', { class:'row between' }, el('div', { class:'row' }, el('span', { class:'badge' }, it.type||'text'), el('span', { class:'small' }, `#${it.id}`)), el('div', {}, el('button', { class:'btn secondary', onclick: ()=>{} }, 'Edit'), el('button', { class:'btn secondary', onclick: ()=> deleteExpansion(it.id) }, 'Delete'))), el('div', { class:'row' }, el('input', { class:'input', value: it.trigger, oninput:(e)=> updateExpansion(it.id, { trigger: e.target.value }) })), el('div', {}, el('textarea', { oninput:(e)=> updateExpansion(it.id, { replacement: e.target.value }) }, it.replacement||'')) ); }
 
-    const list = qs("#expansionList");
-    list.innerHTML = "";
+  // Variables
+  function ListVariables(){ const items = applyFilter(state.variables); return el('div', { class:'grid cols-2 list' }, ...items.map(CardVariable)); }
+  function CardVariable(it){ const cmItems = [ { label:'Delete', onClick: ()=> deleteVariable(it.id) } ]; return el('div', { class:'card', oncontextmenu:(e)=> openContextMenu(e.pageX, e.pageY, cmItems) }, el('div', { class:'row between' }, el('div', { class:'row' }, el('span', { class:'badge' }, it.type||'text'), el('span', { class:'small' }, `#${it.id}`)), el('div', {}, el('button', { class:'btn secondary', onclick: ()=> deleteVariable(it.id) }, 'Delete'))), el('div', { class:'row' }, el('input', { class:'input', value: it.name, oninput:(e)=> updateVariable(it.id, { name: e.target.value }) }), el('select', { onchange:(e)=> updateVariable(it.id, { type: e.target.value }) }, el('option', { value:'formatDate', selected: it.type==='formatDate' }, 'formatDate'), el('option', { value:'text', selected: it.type==='text' }, 'text'))), el('div', {}, el('input', { class:'input', value: it.default||'', oninput:(e)=> updateVariable(it.id, { default: e.target.value }) })) ); }
 
-    const q = (qs("#search").value || "").toLowerCase();
-    const items = state.expansions.filter(x =>
-      !q || x.trigger.toLowerCase().includes(q) || (x.category || "").toLowerCase().includes(q)
-    );
+  // Forms (DnD)
+  function Forms(){ const form = state.forms.find(f=>f.id===state.selectedFormId) || state.forms[0]; return el('div', {}, FormHeader(form), form ? Builder(form) : el('div', { class:'small' }, 'No forms yet. Create one to get started.')); }
+  function FormHeader(form){ return el('div', { class:'row between card' }, el('div', { class:'row' }, el('label', {}, 'Form Name'), el('input', { class:'input', value: form? form.name: '', oninput:(e)=> form && updateForm(form.id, { name: e.target.value }) })), el('div', { class:'row' }, el('label', {}, 'Select'), el('select', { onchange:(e)=> setState({ selectedFormId: Number(e.target.value)||null }) }, ...state.forms.map(f => el('option', { value: f.id, selected: form && f.id===form.id }, `#${f.id} ${f.name}`))), el('button', { class:'btn secondary', onclick: ()=> addForm() }, 'New Form'), el('button', { class:'btn secondary', onclick: ()=> form && deleteForm(form.id) }, 'Delete')) ); }
+  function Builder(form){ const palette = el('div', { class:'card palette' }, el('div', { class:'small' }, 'Palette'), ...PALETTE.map(p => el('div', { class:'item', draggable:true, ondragstart:(e)=> onDragStart(e,p) }, p.label)) ); const canvas = el('div', { class:'card canvas', ondragover:onDragOver, ondrop:(e)=> onDropField(e, form) }, ...(form.fields.length? form.fields.map(FieldCard.bind(null, form)) : [el('div', { class:'small' }, 'Drag items here')]) ); return el('div', { class:'builder grid' }, palette, canvas); }
+  function FieldCard(form, field){ function onDragStartHandle(e){ e.dataTransfer.setData('text/x-from-id', String(field.id)); e.dataTransfer.effectAllowed = 'move'; } function onDropSwap(e){ e.preventDefault(); const from = Number(e.dataTransfer.getData('text/x-from-id')); if (from) moveField(form, from, field.id); } function onDragOverSwap(e){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); } function onDragLeaveSwap(e){ e.currentTarget.classList.remove('drag-over'); } const cmItems = buildFieldContextItems(form, field); return el('div', { class:'field', draggable:true, ondragstart:onDragStartHandle, ondragover:onDragOverSwap, ondragleave:onDragLeaveSwap, ondrop:onDropSwap, oncontextmenu:(e)=> openContextMenu(e.pageX, e.pageY, cmItems) }, el('div', {}, el('div', { class:'row between' }, el('div', { class:'row' }, el('span', { class:'badge' }, field.type), el('span', { class:'small' }, field.key)), el('div', { class:'handle' }, 'Drag')), el('div', { class:'meta' }, el('input', { class:'input', placeholder:'Label', value: field.label||'', oninput:(e)=>{ field.label = e.target.value; updateForm(form.id, { fields: form.fields }); } }), el('input', { class:'input', placeholder:'Key', value: field.key||'', oninput:(e)=>{ field.key = e.target.value; updateForm(form.id, { fields: form.fields }); } }), el('select', { onchange:(e)=>{ field.type = e.target.value; updateForm(form.id, { fields: form.fields }); } }, el('option', { value:'text', selected: field.type==='text' }, 'text'), el('option', { value:'textarea', selected: field.type==='textarea' }, 'textarea'), el('option', { value:'number', selected: field.type==='number' }, 'number'), el('option', { value:'date', selected: field.type==='date' }, 'date'), el('option', { value:'select', selected: field.type==='select' }, 'select')), el('label', {}, el('input', { type:'checkbox', checked: !!field.required, onchange:(e)=>{ field.required = !!e.target.checked; updateForm(form.id, { fields: form.fields }); } }), ' Required') ), field.type==='select' ? SelectEditor(form, field) : InputPreview(field) ), el('div', {}, el('button', { class:'btn secondary', onclick: ()=> duplicateField(form, field) }, 'Duplicate'), el('button', { class:'btn secondary', onclick: ()=> removeField(form, field) }, 'Delete')) ); }
+  function InputPreview(field){ if (field.type==='textarea') return el('textarea', { placeholder:'Preview...' }, field.default||''); if (field.type==='number') return el('input', { class:'input', type:'number', placeholder:'Preview...', value: field.default||'' }); if (field.type==='date') return el('input', { class:'input', type:'date', placeholder:'Preview...', value: field.default||'' }); if (field.type==='select') return el('select', {}, ...(field.options||[]).map(opt => el('option', {}, opt)) ); return el('input', { class:'input', placeholder:'Preview...', value: field.default||'' }); }
+  function SelectEditor(form, field){ const wrap = el('div', {}); wrap.appendChild(el('div', { class:'small' }, 'Options (comma separated)')); wrap.appendChild(el('input', { class:'input', value:(field.options||[]).join(', '), oninput:(e)=>{ field.options = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); updateForm(form.id, { fields: form.fields }); } })); return wrap; }
+  function duplicateField(form, field){ const copy = Object.assign({}, field, { id: uid(), key: field.key+'_copy' }); form.fields.push(copy); updateForm(form.id, { fields: form.fields }); }
+  function removeField(form, field){ form.fields = form.fields.filter(f=>f.id!==field.id); updateForm(form.id, { fields: form.fields }); }
+  function buildFieldContextItems(form, field){ const items = []; if (!state.menu || state.menu.items == null || state.menu.items.fieldEdit !== false){ items.push({ label:'Edit', onClick: ()=>{} }); } if (!state.menu || state.menu.items == null || state.menu.items.fieldDuplicate !== false){ items.push({ label:'Duplicate', onClick: ()=> duplicateField(form, field) }); } if (!state.menu || state.menu.items == null || state.menu.items.fieldDelete !== false){ items.push({ label:'Delete', onClick: ()=> removeField(form, field) }); } return items; }
 
-    for (const e of items) {
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div>
-          <div class="title">${e.trigger} <span class="muted">${e.type}${e.category ? " • " + e.category : ""}</span></div>
-          <div class="muted">${e.type === "form" ? `Form: ${getFormName(e.formId)}` : (e.replacement || "").slice(0, 80)}</div>
-        </div>
-        <div class="actions">
-          <button class="btn small" data-act="edit">Edit</button>
-          <button class="btn small" data-act="delete">Delete</button>
-        </div>`;
-      row.querySelector('[data-act="edit"]').addEventListener('click', () => editExpansion(e.id));
-      row.querySelector('[data-act="delete"]').addEventListener('click', () => deleteExpansion(e.id));
-      list.appendChild(row);
-    }
-  }
+  // Prompts
+  async function getPromptData(){ const res = await rpc('GET_PROMPT_DATA'); return res.data; }
+  function Prompts(){ return el('div', {}, PromptBuilder(), hr(), PromptLibrary()); }
+  function hr(){ return el('hr'); }
+  function PromptBuilder(){
+    const box = el('div', { class:'card' });
+    box.appendChild(el('h3', {}, 'Prompt Engineer'));
+    const out = el('textarea', { placeholder:'Rendered prompt will appear here...' });
 
-  function getFormName(id) {
-    const f = state.forms.find(x => String(x.id) === String(id));
-    return f ? (f.name || `Form ${f.id}`) : "Unknown";
-  }
+    getPromptData().then(data => {
+      const tpl = data.templates.forecast_prompt;
+      const form = el('div', { class:'grid cols-3' });
+      const values = {};
 
-  function editExpansion(id) {
-    const e = state.expansions.find(x => x.id === id);
-    if (!e) return;
-    state.currentExpansion = { ...e };
-    qs("#expTrigger").value = e.trigger || "";
-    qs("#expType").value = e.type || "text";
-    qs("#expCategory").value = e.category || "";
-    qs("#expNotes").value = e.notes || "";
-    if (e.type === "form") {
-      toggleExpEditMode("form");
-      qs("#expFormId").value = String(e.formId || "");
-    } else {
-      toggleExpEditMode("text");
-      qs("#expReplacement").value = e.replacement || "";
-    }
-    updatePreview();
-  }
-
-  function deleteExpansion(id) {
-    state.expansions = state.expansions.filter(x => x.id !== id);
-    persist();
-    renderExpansions();
-    notify("Expansion deleted");
-  }
-
-  function toggleExpEditMode(kind) {
-    const textBox = qs("#expTextBox");
-    const formBox = qs("#expFormBox");
-    const isForm = kind === "form";
-    textBox.classList.toggle("hide", isForm);
-    formBox.classList.toggle("hide", !isForm);
-  }
-
-  function saveExpansion() {
-    const trigger = qs("#expTrigger").value.trim();
-    const type = qs("#expType").value;
-    const category = qs("#expCategory").value;
-    const notes = qs("#expNotes").value;
-    if (!trigger) { notify("Trigger required"); return; }
-
-    let next = { id: state.currentExpansion.id || Date.now(), trigger, type, category, notes };
-    if (type === "form") {
-      next.formId = qs("#expFormId").value || "";
-      if (!next.formId) { notify("Pick a form"); return; }
-    } else {
-      next.replacement = qs("#expReplacement").value || "";
-      if (!next.replacement) { notify("Replacement required"); return; }
-    }
-
-    const i = state.expansions.findIndex(x => x.id === next.id);
-    if (i >= 0) state.expansions[i] = next; else state.expansions.push(next);
-    state.currentExpansion = { trigger: "", type: "text", replacement: "", category: "", notes: "", formId: "" };
-    qs("#expTrigger").value = "";
-    qs("#expReplacement").value = "";
-    qs("#expCategory").value = "";
-    qs("#expNotes").value = "";
-    qs("#expType").value = "text";
-    persist();
-    renderExpansions();
-    updatePreview();
-    notify("Expansion saved");
-  }
-
-  function updatePreview() {
-    const trig = qs("#expTrigger").value || ":trigger";
-    const type = qs("#expType").value;
-    const varMap = buildVarMap(state.variables);
-
-    qs("#previewTrigger").textContent = trig;
-    if (type === "form") {
-      const formId = qs("#expFormId").value;
-      const form = state.forms.find(f => String(f.id) === String(formId));
-      const fakeValues = {};
-      (form?.fields || []).forEach(f => fakeValues[f.name] = applyVars(f.default || "", varMap));
-      qs("#previewText").textContent = applyVars(form?.template || "", { ...varMap, ...fakeValues });
-    } else {
-      const text = qs("#expReplacement").value || "";
-      qs("#previewText").textContent = applyVars(text, varMap);
-    }
-  }
-
-  // Render - Forms
-  function renderForms() {
-    const list = qs("#formsList");
-    list.innerHTML = "";
-    const q = (qs("#search").value || "").toLowerCase();
-    for (const f of state.forms.filter(x => !q || (x.name || "").toLowerCase().includes(q))) {
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div>
-          <div class="title">${f.name || `Form ${f.id}`}</div>
-          <div class="muted">Fields: ${(f.fields || []).length}</div>
-        </div>
-        <div class="actions">
-          <button class="btn small" data-act="select">Select</button>
-        </div>`;
-      row.querySelector('[data-act="select"]').addEventListener('click', () => selectForm(f.id));
-      list.appendChild(row);
-    }
-
-    // If nothing selected, pick first
-    if (!state.selectedFormId && state.forms[0]) selectForm(state.forms[0].id);
-  }
-
-  function selectForm(id) {
-    state.selectedFormId = id;
-    const f = state.forms.find(x => x.id === id);
-    if (!f) return;
-    qs("#formName").value = f.name || "";
-    qs("#formTemplate").value = f.template || "";
-    renderFormFields(f);
-  }
-
-  function renderFormFields(form) {
-    const host = qs("#fieldsList");
-    host.innerHTML = "";
-    for (const fld of form.fields || []) {
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div>
-          <div class="title">${fld.name} <span class="muted">${fld.type}</span></div>
-          <div class="muted">Default: ${(fld.default || "").slice(0, 80)}</div>
-        </div>
-        <div class="actions">
-          <button class="btn small" data-act="edit">Edit</button>
-          <button class="btn small" data-act="delete">Delete</button>
-        </div>`;
-      row.querySelector('[data-act="edit"]').addEventListener('click', () => editField(form.id, fld.id));
-      row.querySelector('[data-act="delete"]').addEventListener('click', () => deleteField(form.id, fld.id));
-      host.appendChild(row);
-    }
-  }
-
-  function editField(formId, fieldId) {
-    const form = state.forms.find(f => f.id === formId);
-    if (!form) return;
-    const fld = form.fields.find(x => x.id === fieldId);
-    if (!fld) return;
-
-    const name = prompt("Field name", fld.name) || fld.name;
-    const type = prompt("Field type (text, textarea, multiline)", fld.type) || fld.type;
-    const def = prompt("Default value", fld.default || "") || fld.default || "";
-
-    fld.name = name;
-    fld.type = type;
-    fld.default = def;
-    persist();
-    selectForm(formId);
-    notify("Field updated");
-  }
-
-  function deleteField(formId, fieldId) {
-    const form = state.forms.find(f => f.id === formId);
-    if (!form) return;
-    form.fields = (form.fields || []).filter(x => x.id !== fieldId);
-    persist();
-    selectForm(formId);
-  }
-
-  function addForm() {
-    const f = { id: Date.now(), name: "New Form", template: "", fields: [] };
-    state.forms.push(f);
-    persist();
-    renderForms();
-    selectForm(f.id);
-  }
-
-  function dupForm() {
-    const form = state.forms.find(f => f.id === state.selectedFormId);
-    if (!form) { notify("Pick a form"); return; }
-    const copy = JSON.parse(JSON.stringify(form));
-    copy.id = Date.now();
-    copy.name = `${form.name || "Form"} Copy`;
-    copy.fields.forEach(f => f.id = Date.now() + Math.floor(Math.random() * 10000));
-    state.forms.push(copy);
-    persist();
-    renderForms();
-    selectForm(copy.id);
-    notify("Form duplicated");
-  }
-
-  function delForm() {
-    if (!state.selectedFormId) return;
-    const id = state.selectedFormId;
-    state.forms = state.forms.filter(f => f.id !== id);
-    // Remove any expansions that pointed at this form to avoid orphans
-    state.expansions = state.expansions.map(e => (e.type === "form" && String(e.formId) === String(id)) ? { ...e, formId: "" } : e);
-    state.selectedFormId = null;
-    persist();
-    renderForms();
-    renderExpansions();
-  }
-
-  function addField() {
-    const form = state.forms.find(f => f.id === state.selectedFormId);
-    if (!form) { notify("Pick a form"); return; }
-    form.fields = form.fields || [];
-    form.fields.push({ id: Date.now(), name: "field", type: "text", default: "" });
-    persist();
-    selectForm(form.id);
-  }
-
-  function addFieldFromVar() {
-    const form = state.forms.find(f => f.id === state.selectedFormId);
-    if (!form) { notify("Pick a form"); return; }
-    const names = state.variables.map(v => v.name).join(", ");
-    const name = prompt(`Variable to add as field. Available: ${names}`);
-    if (!name) return;
-    const v = state.variables.find(x => x.name === name);
-    if (!v) { notify("No such variable"); return; }
-    form.fields.push({ id: Date.now(), name: v.name, type: v.type === "multiline" ? "multiline" : "text", default: v.default || "" });
-    persist();
-    selectForm(form.id);
-  }
-
-  function saveForm() {
-    const form = state.forms.find(f => f.id === state.selectedFormId);
-    if (!form) { notify("Pick a form"); return; }
-    form.name = qs("#formName").value || form.name;
-    form.template = qs("#formTemplate").value || form.template;
-    persist();
-    renderForms();
-    notify("Form saved");
-  }
-
-  // Render - Variables
-  function renderVariables() {
-    const host = qs("#variablesList");
-    host.innerHTML = "";
-
-    const q = (qs("#search").value || "").toLowerCase();
-    for (const v of state.variables.filter(x => !q || (x.name || "").toLowerCase().includes(q))) {
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div>
-          <div class="title">${v.name} <span class="muted">${v.type}</span></div>
-          <div class="muted">Default: ${(v.default || "").slice(0, 80)}</div>
-        </div>
-        <div class="actions">
-          <button class="btn small" data-act="edit">Edit</button>
-          <button class="btn small" data-act="delete">Delete</button>
-        </div>`;
-      row.querySelector('[data-act="edit"]').addEventListener('click', () => editVariable(v.id));
-      row.querySelector('[data-act="delete"]').addEventListener('click', () => deleteVariable(v.id));
-      host.appendChild(row);
-    }
-  }
-
-  function addVariable() {
-    state.variables.push({ id: Date.now(), name: "var", type: "text", default: "" });
-    persist();
-    renderVariables();
-  }
-
-  function editVariable(id) {
-    const v = state.variables.find(x => x.id === id);
-    if (!v) return;
-    const name = prompt("Variable name", v.name) || v.name;
-    const type = prompt("Variable type (text, choice, date, shell)", v.type) || v.type;
-    const def = prompt("Default value", v.default || "") || v.default || "";
-    v.name = name;
-    v.type = type;
-    v.default = def;
-    persist();
-    renderVariables();
-  }
-
-  function deleteVariable(id) {
-    state.variables = state.variables.filter(x => x.id !== id);
-    persist();
-    renderVariables();
-  }
-
-  // Library
-  function renderLibrary() {
-    const libE = qs("#libExpansions");
-    const libF = qs("#libForms");
-    const libV = qs("#libVariables");
-    libE.innerHTML = libF.innerHTML = libV.innerHTML = "";
-
-    for (const e of state.expansions) {
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `<div><div class="title">${e.trigger}</div><div class="muted">${e.type === "form" ? `Form ${getFormName(e.formId)}` : (e.replacement || "").slice(0, 80)}</div></div>`;
-      libE.appendChild(el);
-    }
-
-    for (const f of state.forms) {
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `<div><div class="title">${f.name}</div><div class="muted">Fields: ${(f.fields || []).length}</div></div>`;
-      libF.appendChild(el);
-    }
-
-    for (const v of state.variables) {
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `<div><div class="title">${v.name}</div><div class="muted">${v.type}</div></div>`;
-      libV.appendChild(el);
-    }
-  }
-
-  // Config
-  function saveConfig() {
-    state.config.auto_restart = qs("#cfgAutoRestart").checked;
-    state.config.show_notifications = qs("#cfgShowNotifications").checked;
-    state.config.toggle_key = qs("#cfgToggleKey").value || "ALT+SPACE";
-    state.config.backend = qs("#cfgBackend").value || "Auto";
-    state.config.clipboard_threshold = Number(qs("#cfgClipboardThreshold").value || 100);
-    persist();
-    notify("Config saved");
-  }
-
-  function populateConfigGUI() {
-    qs("#cfgAutoRestart").checked = !!state.config.auto_restart;
-    qs("#cfgShowNotifications").checked = !!state.config.show_notifications;
-    qs("#cfgToggleKey").value = state.config.toggle_key || "ALT+SPACE";
-    qs("#cfgBackend").value = state.config.backend || "Auto";
-    qs("#cfgClipboardThreshold").value = Number(state.config.clipboard_threshold || 100);
-  }
-
-  // Import Export
-  function toYAML(obj) {
-    let yaml = "";
-    for (const [key, value] of Object.entries(obj)) {
-      yaml += `${key}:\n`;
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          yaml += `  - `;
-          if (typeof item === "object" && item !== null) {
-            const pairs = Object.entries(item).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join("\n    ");
-            yaml += pairs + "\n    ";
-          } else {
-            yaml += JSON.stringify(item) + "\n";
-          }
-        }
-      } else if (typeof value === "object" && value !== null) {
-        for (const [k, v] of Object.entries(value)) {
-          yaml += `  ${k}: ${JSON.stringify(v)}\n`;
-        }
+      function variablePicker(onPick){
+        const sel = el('select', { onchange:(e)=>{ const v = e.target.value; if (v) onPick(v); e.target.selectedIndex = 0; } },
+          el('option', { value:'' }, 'Insert variable...'),
+          ...state.variables.map(v => el('option', { value:`{{${v.name}}}` }, `{{${v.name}}}`))
+        );
+        return sel;
       }
-      yaml += "\n";
-    }
-    return yaml;
-  }
 
-  function exportData(kind, format) {
-    let data = {};
-    switch (kind) {
-      case "expansions": data = { expansions: state.expansions }; break;
-      case "forms": data = { forms: state.forms }; break;
-      case "variables": data = { variables: state.variables }; break;
-      case "config": data = { config: state.config }; break;
-      case "all": data = { expansions: state.expansions, forms: state.forms, variables: state.variables, config: state.config }; break;
-    }
-    const filename = `mat-backup-${kind}-${new Date().toISOString().slice(0,10)}.${format}`;
-    const content = format === "yaml" ? toYAML(data) : JSON.stringify(data, null, 2);
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    notify("Exported");
-  }
-
-  function importData(file, kind) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const text = String(reader.result || "");
-        let data;
-        if (file.name.endsWith(".json")) {
-          data = JSON.parse(text);
+      function fieldRow(name, def){
+        const label = def.label || name;
+        let control;
+        if (def.type === 'enum'){
+          control = el('select', { onchange:(e)=> values[name] = e.target.value }, ...def.values.map(v => el('option', { value:v, selected: v===def.default }, v)) );
+          values[name] = def.default || def.values[0];
+        } else if (def.type === 'list'){
+          control = el('select', { multiple:true, onchange:(e)=> values[name] = Array.from(e.target.selectedOptions).map(o=>o.value) }, ...def.values.map(v => el('option', { value:v, selected: (def.default||[]).includes(v) }, v)) );
+          values[name] = def.default || [];
         } else {
-          // naive YAML
-          const lines = text.split(/\r?\n/);
-          const top = {};
-          let currentKey = null;
-          let currentArr = null;
-          for (const line of lines) {
-            const m = line.match(/^(\w+):\s*$/);
-            if (m) { currentKey = m[1]; top[currentKey] = []; currentArr = top[currentKey]; continue; }
-            const kv = line.match(/^\s*-\s*(.+)$/);
-            if (kv && currentArr) {
-              const obj = {}; const parts = kv[1].split(/\n\s{4}/);
-              for (const part of parts) {
-                const p2 = part.match(/^(\w+):\s*(.*)$/);
-                if (p2) obj[p2[1]] = JSON.parse(p2[2]);
-              }
-              currentArr.push(obj);
-            }
-          }
-          data = top;
+          const input = el('input', { class:'input', value: def.default || '', oninput:(e)=> values[name] = e.target.value });
+          const vars = variablePicker((val)=>{ input.value = val; values[name] = val; });
+          control = el('div', { class:'row' }, input, vars);
+          values[name] = def.default || '';
         }
-        if (kind === "expansions" && data.expansions) state.expansions = data.expansions;
-        if (kind === "forms" && data.forms) state.forms = data.forms;
-        if (kind === "variables" && data.variables) state.variables = data.variables;
-        if (kind === "config" && data.config) state.config = data.config;
-        if (kind === "all") {
-          state.expansions = data.expansions || state.expansions;
-          state.forms = data.forms || state.forms;
-          state.variables = data.variables || state.variables;
-          state.config = data.config || state.config;
-        }
-        persist();
-        renderExpansions();
-        renderForms();
-        renderVariables();
-        renderLibrary();
-        populateConfigGUI();
-        notify("Imported");
-      } catch (e) {
-        console.error(e);
-        notify("Import failed");
+        form.appendChild(el('div', { class:'card' }, el('label', {}, label), control));
       }
-    };
-    reader.readAsText(file);
+
+      for (const [name, def] of Object.entries(tpl.dynamic_fields)){ fieldRow(name, def); }
+
+      function renderTemplate(){ let text = tpl.user; for (const [k,v] of Object.entries(values)){ const val = Array.isArray(v) ? v.join(', ') : v; text = text.replaceAll('{'+k+'}', String(val)); } out.value = text; }
+
+      const actions = el('div', { class:'row' },
+        el('button', { class:'btn', onclick: renderTemplate }, 'Render'),
+        el('button', { class:'btn secondary', onclick: async ()=>{ renderTemplate(); await navigator.clipboard.writeText(out.value); showToast('Copied'); } }, 'Copy'),
+        el('button', { class:'btn secondary', onclick: async ()=>{ renderTemplate(); await addPrompt({ name: 'Saved '+new Date().toLocaleString(), templateId: 'forecast_prompt', values: values, rendered: out.value }); } }, 'Save')
+      );
+
+      box.appendChild(form);
+      box.appendChild(actions);
+      box.appendChild(out);
+    });
+    return box;
   }
+  function PromptLibrary(){ const items = applyFilter(state.prompts); return el('div', { class:'grid cols-2 list' }, ...items.map(p => el('div', { class:'card' }, el('div', { class:'row between' }, el('strong', {}, p.name), el('div', {}, el('button', { class:'btn secondary', onclick: async ()=>{ await navigator.clipboard.writeText(p.rendered||''); showToast('Copied'); } }, 'Copy'), el('button', { class:'btn secondary', onclick: ()=> deletePrompt(p.id) }, 'Delete'))), el('textarea', {}, p.rendered||'')))); }
 
-  // Bind UI
-  function bind() {
-    qsa(".nav-btn").forEach(btn => btn.addEventListener("click", () => setPanel(btn.dataset.tab)));
+  // Settings
+  function Settings(){ const menu = state.menu || { enableContextMenu:true, items:{ openManager:true, insertExpansion:true, promptEngineer:true } }; const root = el('div', { class:'card' }, el('h3', {}, 'Settings')); const row1 = el('div', { class:'row' }, el('label', {}, 'Enable right-click menu'), el('input', { type:'checkbox', checked: !!menu.enableContextMenu, onchange:(e)=> setMenu({ enableContextMenu: !!e.target.checked, items: menu.items }) })); const row2 = el('div', { class:'row' }, el('label', {}, 'Menu items')); const list = el('div', { class:'grid cols-3' }, Toggle('Open Manager', !!menu.items.openManager, v => setMenu({ items: Object.assign({}, menu.items, { openManager: v }) })), Toggle('Insert Expansion', !!menu.items.insertExpansion, v => setMenu({ items: Object.assign({}, menu.items, { insertExpansion: v }) })), Toggle('Prompt Engineer', !!menu.items.promptEngineer, v => setMenu({ items: Object.assign({}, menu.items, { promptEngineer: v }) })) ); root.appendChild(row1); root.appendChild(row2); root.appendChild(list); root.appendChild(el('hr')); root.appendChild(el('div', { class:'small' }, 'Context menu changes apply immediately.')); return root; }
+  function Toggle(label, val, on){ return el('label', {}, el('input', { type:'checkbox', checked: !!val, onchange:(e)=> on(!!e.target.checked) }), ' ', label); }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.altKey && e.code === "Space") { e.preventDefault(); qs("#search").focus(); }
-    });
+  // Help
+  function Help(){ return el('div', { class:'card' }, el('h3', {}, 'Help'), el('p', {}, 'Triggers: use strings like :date, :sig. Variables can be referenced as {{date}}. Build custom forms with the palette and drag them into the canvas. Right-click on items to see actions. Configure the context menu under Settings.')); }
 
-    qs("#toggleTheme").addEventListener("click", () => { document.documentElement.classList.toggle("light"); notify("Theme toggled"); });
-
-    // Search triggers re-renders for list views
-    qs("#search").addEventListener("input", () => { renderExpansions(); renderForms(); renderVariables(); });
-
-    // Expansion editor
-    qs("#expType").addEventListener("change", () => { toggleExpEditMode(qs("#expType").value); updatePreview(); });
-    qs("#expTrigger").addEventListener("input", updatePreview);
-    qs("#expReplacement").addEventListener("input", updatePreview);
-    qs("#expFormId").addEventListener("change", updatePreview);
-    qs("#saveExpansion").addEventListener("click", saveExpansion);
-    qs("#resetExpansion").addEventListener("click", () => {
-      state.currentExpansion = { trigger: "", type: "text", replacement: "", category: "", notes: "", formId: "" };
-      qs("#expTrigger").value = "";
-      qs("#expReplacement").value = "";
-      qs("#expCategory").value = "";
-      qs("#expNotes").value = "";
-      qs("#expType").value = "text";
-      updatePreview();
-    });
-
-    // Forms
-    qs("#addForm").addEventListener("click", addForm);
-    qs("#dupForm").addEventListener("click", dupForm);
-    qs("#delForm").addEventListener("click", delForm);
-    qs("#addField").addEventListener("click", addField);
-    qs("#addFieldFromVar").addEventListener("click", addFieldFromVar);
-    qs("#saveForm").addEventListener("click", saveForm);
-
-    // Variables
-    qs("#addVariable").addEventListener("click", addVariable);
-
-    // Config
-    qs("#toggleYaml").addEventListener("click", () => {
-      const box = qs("#yamlBox");
-      const gui = qs("#configGui");
-      const showYaml = box.classList.contains("hide");
-      box.classList.toggle("hide", !showYaml);
-      gui.classList.toggle("hide", showYaml);
-      qs("#toggleYaml").textContent = showYaml ? "GUI Mode" : "YAML Mode";
-    });
-    qs("#saveConfig").addEventListener("click", saveConfig);
-
-    // Import Export
-    qs("#doImport").addEventListener("click", () => {
-      const kind = qs("#importType").value;
-      const file = qs("#importFile").files && qs("#importFile").files[0];
-      if (!file) { notify("Pick a file"); return; }
-      importData(file, kind);
-    });
-    qs("#doExport").addEventListener("click", () => {
-      const kind = qs("#exportType").value;
-      const format = qs("#exportFormat").value;
-      exportData(kind, format);
-    });
-  }
+  // Render
+  function render(){ app.innerHTML = ''; app.appendChild(Nav()); if (state.tab !== 'help') app.appendChild(Toolbar()); if (state.tab === 'expansions') app.appendChild(ListExpansions()); if (state.tab === 'variables') app.appendChild(ListVariables()); if (state.tab === 'forms') app.appendChild(Forms()); if (state.tab === 'prompts') app.appendChild(Prompts()); if (state.tab === 'settings') app.appendChild(Settings()); if (state.tab === 'help') app.appendChild(Help()); if (state.toast) app.appendChild(el('div', { class:'toast' }, state.toast)); }
 
   // Init
-  (async function init() {
-    bind();
-    await loadAll();
-    setPanel("composer");
-    renderExpansions();
-    renderForms();
-    renderVariables();
-    renderLibrary();
-    populateConfigGUI();
-    updatePreview();
-    qs("#statusText").textContent = "Connected";
-  })();
+  load();
+  render();
+
+  /*
+  CHANGELOG
+  2025-08-11 v1.5.1
+  - Prompt Engineer: added variable picker next to each non-enum field so user can drop in {{variable}} values from the Variables library.
+  - Everything else from v1.5.0 retained.
+  */
 })();
