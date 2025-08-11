@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Awesome Tool - Manager</title>
+    <link rel="stylesheet" href="manager.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo"></div>
+          <h1>My Awesome Tool</h1>
+        </div>
+        <div class="search">
+          <input id="search" type="text" placeholder="Search expansions, forms, variables (Alt+Space)" />
+        </div>
+        <nav class="nav">
+          <button data-tab="composer" class="nav-btn active">Expansions</button>
+          <button data-tab="forms" class="nav-btn">Forms</button>
+          <button data-tab="variables" class="nav-btn">Variables</button>
+          <button data-tab="library" class="nav-btn">Library</button>
+          <button data-tab="config" class="nav-btn">Configuration</button>
+          <button data-tab="import-export" class="nav-btn">Import or Export</button>
+        </nav>
+      </aside>
+
+      <section class="content">
+        <header class="header">
+          <h2 id="panelTitle">Expansions</h2>
+          <div class="tools">
+            <button id="toggleTheme" class="icon-btn" title="Toggle Theme">🎨</button>
+            <button id="openOptions" class="icon-btn" title="Open Options">⚙️</button>
+          </div>
+        </header>
+
+        <main class="panels">
+          <!-- Expansions -->
+          <section data-panel="composer" class="panel active">
+            <div class="card">
+              <h3 class="card-title">Create or Edit Expansion</h3>
+              <div class="grid2">
+                <div class="stack gap">
+                  <label class="lbl">Trigger</label>
+                  <input id="expTrigger" class="input" type="text" placeholder=":email" />
+
+                  <label class="lbl">Type</label>
+                  <select id="expType" class="input">
+                    <option value="text">Text</option>
+                    <option value="form">Form</option>
+                  </select>
+
+                  <div id="expTextBox" class="col gap">
+                    <label class="lbl">Replacement</label>
+                    <textarea id="expReplacement" class="input area" placeholder="john.doe@example.com"></textarea>
+                  </div>
+
+                  <div id="expFormBox" class="col gap hide">
+                    <label class="lbl">Form</label>
+                    <select id="expFormId" class="input"></select>
+                    <small class="lbl">Pick a form from the Forms tab. You can edit its fields and template there.</small>
+                  </div>
+
+                  <div class="grid2 gap">
+                    <div>
+                      <label class="lbl">Category</label>
+                      <input id="expCategory" class="input" type="text" placeholder="email" />
+                    </div>
+                    <div>
+                      <label class="lbl">Notes</label>
+                      <input id="expNotes" class="input" type="text" placeholder="optional" />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <button id="saveExpansion" class="btn">Save</button>
+                    <button id="resetExpansion" class="btn alt">Reset</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <h4 class="sub">Live Preview</h4>
+                  <div class="preview-box">
+                    <div class="meta">Input: <span id="previewTrigger">:trigger</span></div>
+                    <div class="meta">Output:</div>
+                    <pre id="previewText" class="mono"></pre>
+                  </div>
+                  <div class="meta">Available placeholders: {{date}}, {{time}}, any defined variable like {{username}}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title">Existing Expansions</h3>
+              <div id="expansionList" class="col gap"></div>
+            </div>
+          </section>
+
+          <!-- Forms -->
+          <section data-panel="forms" class="panel">
+            <div class="card">
+              <div class="row spread">
+                <h3 class="card-title">Form Builder</h3>
+                <div class="row">
+                  <button id="addForm" class="btn">New Form</button>
+                  <button id="dupForm" class="btn alt">Duplicate</button>
+                  <button id="delForm" class="btn">Delete</button>
+                </div>
+              </div>
+
+              <div class="grid2">
+                <div class="col gap">
+                  <label class="lbl">Forms</label>
+                  <div id="formsList" class="col gap"></div>
+                </div>
+
+                <div class="col gap">
+                  <label class="lbl">Selected Form</label>
+                  <input id="formName" class="input" type="text" placeholder="Form name" />
+                  <div class="row gap">
+                    <button id="addField" class="btn">Add Field</button>
+                    <button id="addFieldFromVar" class="btn alt">Add Field from Variable</button>
+                  </div>
+                  <div id="fieldsList" class="col gap"></div>
+                  <label class="lbl">Template</label>
+                  <textarea id="formTemplate" class="input area mono" placeholder="Example: Name: {{name}}"></textarea>
+                  <div class="row">
+                    <button id="saveForm" class="btn">Save Form</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Variables -->
+          <section data-panel="variables" class="panel">
+            <div class="card">
+              <div class="row spread">
+                <h3 class="card-title">Variable Manager</h3>
+                <button id="addVariable" class="btn">Add Variable</button>
+              </div>
+              <div id="variablesList" class="col gap"></div>
+            </div>
+          </section>
+
+          <!-- Library -->
+          <section data-panel="library" class="panel">
+            <div class="card">
+              <h3 class="card-title">Library</h3>
+              <div class="grid3">
+                <div class="card">
+                  <h4 class="sub">Expansions</h4>
+                  <div id="libExpansions" class="col gap"></div>
+                </div>
+                <div class="card">
+                  <h4 class="sub">Forms</h4>
+                  <div id="libForms" class="col gap"></div>
+                </div>
+                <div class="card">
+                  <h4 class="sub">Variables</h4>
+                  <div id="libVariables" class="col gap"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Config -->
+          <section data-panel="config" class="panel">
+            <div class="card">
+              <div class="row gap">
+                <h3 class="card-title">Configuration</h3>
+                <button id="toggleYaml" class="btn alt">YAML Mode</button>
+                <button id="saveConfig" class="btn">Save Config</button>
+              </div>
+
+              <div id="yamlBox" class="card hide">
+                <textarea id="configYaml" class="input area mono" placeholder="# Espanso Configuration&#10;# Edit your configuration here..."></textarea>
+              </div>
+
+              <div id="configGui" class="grid2">
+                <div class="card">
+                  <h4 class="sub">General Settings</h4>
+                  <div class="col gap">
+                    <label class="row spread"><span>Auto-restart</span><input id="cfgAutoRestart" type="checkbox" /></label>
+                    <label class="row spread"><span>Show notifications</span><input id="cfgShowNotifications" type="checkbox" /></label>
+                    <label class="col"><span class="lbl">Toggle key</span><input id="cfgToggleKey" class="input" type="text" /></label>
+                  </div>
+                </div>
+                <div class="card">
+                  <h4 class="sub">Advanced Settings</h4>
+                  <div class="col gap">
+                    <label class="col"><span class="lbl">Backend</span>
+                      <select id="cfgBackend" class="input">
+                        <option value="Auto">Auto</option>
+                        <option value="Clipboard">Clipboard</option>
+                        <option value="Inject">Inject</option>
+                      </select></label>
+                    <label class="col"><span class="lbl">Clipboard threshold</span><input id="cfgClipboardThreshold" class="input" type="number" /></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Import Export -->
+          <section data-panel="import-export" class="panel">
+            <div class="card">
+              <h3 class="card-title">Import or Export</h3>
+              <div class="grid2">
+                <div class="card">
+                  <h4 class="sub green">Import</h4>
+                  <div class="col gap">
+                    <label class="col"><span class="lbl">Import Type</span>
+                      <select id="importType" class="input">
+                        <option value="expansions">Expansions</option>
+                        <option value="forms">Forms</option>
+                        <option value="variables">Variables</option>
+                        <option value="config">Configuration</option>
+                        <option value="all">Complete Backup</option>
+                      </select></label>
+                    <input id="importFile" type="file" accept=".yaml,.yml,.json" />
+                    <button id="doImport" class="btn">Import</button>
+                  </div>
+                </div>
+                <div class="card">
+                  <h4 class="sub blue">Export</h4>
+                  <div class="col gap">
+                    <label class="col"><span class="lbl">Export Type</span>
+                      <select id="exportType" class="input">
+                        <option value="expansions">Expansions Only</option>
+                        <option value="forms">Forms Only</option>
+                        <option value="variables">Variables Only</option>
+                        <option value="config">Configuration Only</option>
+                        <option value="all">Complete Backup</option>
+                      </select></label>
+                    <label class="col"><span class="lbl">Format</span>
+                      <select id="exportFormat" class="input">
+                        <option value="yaml">YAML</option>
+                        <option value="json">JSON</option>
+                      </select></label>
+                    <button id="doExport" class="btn">Export</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h4 class="sub">Recent Backups</h4>
+                <div id="recentBackups" class="col gap"></div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <div id="statusBar" class="status">
+      <div class="dot"></div>
+      <span id="statusText">Connected</span>
+      <span id="statusCounts" class="muted"></span>
+    </div>
+
+    <script src="manager.js"></script>
+  </body>
+</html>

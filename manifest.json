@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "My Awesome Tool",
+  "description": "Espanso-style text expansion with a built-in manager UI.",
+  "version": "1.1.0",
+  "action": {
+    "default_title": "My Awesome Tool",
+    "default_popup": "ui/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "ui/manager.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "ui/manager.html",
+        "ui/manager.css",
+        "ui/manager.js",
+        "ui/popup.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

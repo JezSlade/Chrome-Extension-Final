@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Awesome Tool</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <img src="../assets/icon48.png" class="logo" alt="logo" />
+      <h1>My Awesome Tool</h1>
+    </header>
+
+    <main class="main">
+      <div class="row">
+        <label class="switch">
+          <input id="enabled" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+        <span id="statusLabel">Enabled</span>
+      </div>
+
+      <div class="row">
+        <span id="expCount">0 expansions</span>
+      </div>
+
+      <div class="row">
+        <button id="openManager" class="btn">Open Manager</button>
+        <button id="reloadTab" class="btn">Reload Tab</button>
+      </div>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
