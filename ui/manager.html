@@ -1,14 +1,23 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
   <title>ToolForge Manager</title>
-  <link rel="stylesheet" href="manager.css" />
+  <link rel="stylesheet" href="./manager.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* Safety if CSS fails to load */
+    #app{min-height:100vh}
+  </style>
 </head>
 <body>
-  <div id="app" class="container glass"></div>
-  <div id="contextMenu" class="context-menu hidden"><ul id="contextMenuItems"></ul></div>
+  <div id="app"></div>
+
+  <!-- Right click context menu container used by modules -->
+  <div id="contextMenu" class="context-menu hidden">
+    <ul id="contextMenuItems"></ul>
+  </div>
+
   <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -1,16 +1,25 @@
 // ui/modules/expansions.js
-import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu } from '../utils.js';
+import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu, openModal, closeModal } from '../utils.js';
 
 export const id = 'expansions';
 export const label = 'Expansions';
 
-// Local UI state for the composer wizard
+// Composer state
 let wizard = {
   open: false,
   editingId: null,
-  elements: [], // [{type:'text'|'input'|'variable', value:'', label?:''}]
+  elements: [],
   step: 1
 };
+
+// Showcase library - local examples for demo and quick start
+const SAMPLE_EXPANSIONS = [
+  { name:'Email signature', elements:[{type:'text', value:'Best regards,\\nJohn Doe\\n{{env.USER}}'}] },
+  { name:'Current date', elements:[{type:'date', format:'%Y-%m-%d'}] },
+  { name:'Clipboard paste', elements:[{type:'clipboard'}] },
+  { name:'UUID', elements:[{type:'uuid'}] },
+  { name:'Regex capture example', elements:[{type:'text', value:'Matched: {{match_1}}'}] }
+];
 
 function toolbar(){
   return Toolbar({
@@ -22,11 +31,10 @@ function toolbar(){
 
 function startNew(){
   wizard = { open: true, editingId: null, elements: [], step: 1 };
-  setState({}); // trigger re-render
+  setState({});
 }
 
 async function editExisting(exp){
-  // If composer exists use it, otherwise seed from replacement
   const base = Array.isArray(exp.composer) && exp.composer.length
     ? exp.composer
     : [{ type: 'text', value: String(exp.replacement || '') }];
@@ -35,7 +43,6 @@ async function editExisting(exp){
 }
 
 function buildReplacement(){
-  // Map elements to template pieces
   return wizard.elements.map(item=>{
     if (item.type === 'text') return item.value || '';
     if (item.type === 'input') return `{{input:${item.label || 'Input'}}}`;
@@ -58,15 +65,14 @@ async function saveWizard(){
   } else {
     await rpc('ADD_EXPANSION', { item: { trigger: ':new', replacement: rep, type: 'text', composer: wizard.elements } });
   }
-  // close
   wizard = { open: false, editingId: null, elements: [], step: 1 };
-  await reload();
+  const st = await rpc('GET_STATE');
+  setState({ data: st.data });
   showToast('Saved');
 }
 
 async function update(id, patch){ await rpc('UPDATE_EXPANSION', { id, patch }); }
-async function remove(id){ await rpc('DELETE_EXPANSION', { id }); await reload(); showToast('Deleted'); }
-async function reload(){ const st = await rpc('GET_STATE'); setState({ data: st.data }); }
+async function remove(id){ await rpc('DELETE_EXPANSION', { id }); const st = await rpc('GET_STATE'); setState({ data: st.data }); showToast('Deleted'); }
 
 function list(){
   const items = applyFilter(getState().data.expansions || []);
@@ -76,7 +82,7 @@ function list(){
 function card(it){
   const cm = [
     { label:'Edit', onClick: ()=> editExisting(it) },
-    { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: (it.trigger||'')+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); await reload(); } },
+    { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: (it.trigger||'')+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); const st = await rpc('GET_STATE'); setState({ data: st.data }); } },
     { label:'Delete', onClick: ()=> remove(it.id) }
   ];
   return el('div', { class:'card', oncontextmenu:(e)=>{ openContextMenu(e.pageX, e.pageY, cm); } },
@@ -108,66 +114,61 @@ function Stepper(){
   const steps = [
     { n:1, label:'Select first element' },
     { n:2, label:'Edit element' },
-    { n:3, label:'Add next element or Save' }
+    { n:3, label:'Add next or Save' }
   ];
   return el('div', { class:'stepper' },
     ...steps.map(s => el('div', { class:'step' + (wizard.step === s.n ? ' active' : '') }, `${s.n}. ${s.label}`))
   );
 }
 
+function openElementEditorModal(item){
+  const body = el('div', {});
+  if (item.type === 'text'){
+    body.appendChild(el('label', {}, 'Text'));
+    body.appendChild(el('textarea', { class:'input big', placeholder:'Enter text...', 'data-focus-key':'exp-composer-text', oninput:(e)=>{ item.value = e.target.value; } }, item.value||''));
+  } else if (item.type === 'input'){
+    body.appendChild(el('label', {}, 'Prompt label'));
+    body.appendChild(el('input', { class:'input', value: item.label || 'Input', 'data-focus-key':'exp-composer-label', oninput:(e)=>{ item.label = e.target.value; } }));
+  } else if (item.type === 'variable'){
+    const vars = (getState().data.variables || []);
+    body.appendChild(el('label', {}, 'Pick variable'));
+    body.appendChild(el('select', { class:'input', onchange:(e)=>{ item.value = e.target.value; } },
+      el('option', { value:'' }, 'Select variable...'),
+      ...vars.map(v => el('option', { value:v.name, selected: item.value === v.name }, `${v.name} (${v.type||'text'})`))
+    ));
+  } else if (item.type === 'date'){
+    body.appendChild(el('label', {}, 'Date format'));
+    body.appendChild(el('input', { class:'input', value: item.format || '%Y-%m-%d', 'data-focus-key':'exp-composer-date', oninput:(e)=>{ item.format = e.target.value; } }));
+  } else {
+    body.appendChild(el('div', { class:'small' }, 'No options for this element'));
+  }
+
+  openModal({
+    title: 'Edit Element',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
+      el('button', { class:'btn', onclick: ()=>{ wizard.step = 3; setState({}); closeModal(); } }, 'Apply')
+    ]
+  });
+}
+
 function elementPicker(){
   const btn = (label, on)=> el('button', { class:'btn', onclick:on }, label);
   return el('div', { class:'row' },
-    btn('Text', ()=>{ wizard.elements.push({ type:'text', value:'' }); wizard.step = 2; setState({}); }),
-    btn('User input', ()=>{ wizard.elements.push({ type:'input', label:'Label' }); wizard.step = 2; setState({}); }),
-    btn('Variable', ()=>{ wizard.elements.push({ type:'variable', value:'' }); wizard.step = 2; setState({}); }),
+    btn('Text', ()=>{ const it = { type:'text', value:'' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
+    btn('User input', ()=>{ const it = { type:'input', label:'Label' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
+    btn('Variable', ()=>{ const it = { type:'variable', value:'' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
     btn('Clipboard', ()=>{ wizard.elements.push({ type:'clipboard' }); wizard.step = 3; setState({}); }),
-    btn('Date', ()=>{ wizard.elements.push({ type:'date', format:'%Y-%m-%d' }); wizard.step = 2; setState({}); }),
+    btn('Date', ()=>{ const it = { type:'date', format:'%Y-%m-%d' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
     btn('UUID', ()=>{ wizard.elements.push({ type:'uuid' }); wizard.step = 3; setState({}); })
   );
-}
-
-function elementEditor(){
-  const idx = wizard.elements.length - 1;
-  if (idx < 0) return el('div', {}, '');
-  const item = wizard.elements[idx];
-
-  if (item.type === 'text'){
-    return el('div', {},
-      el('label', {}, 'Text'),
-      el('textarea', { class:'input', placeholder:'Enter text...', oninput:(e)=>{ item.value = e.target.value; } }, item.value||'')
-    );
-  }
-  if (item.type === 'input'){
-    return el('div', {},
-      el('label', {}, 'Prompt label'),
-      el('input', { class:'input', value: item.label || 'Input', oninput:(e)=>{ item.label = e.target.value; } })
-    );
-  }
-  if (item.type === 'variable'){
-    const vars = (getState().data.variables || []);
-    return el('div', {},
-      el('label', {}, 'Pick variable'),
-      el('select', { class:'input', onchange:(e)=>{ item.value = e.target.value; } },
-        el('option', { value:'' }, 'Select variable...'),
-        ...vars.map(v => el('option', { value:v.name, selected: item.value === v.name }, `${v.name} (${v.type||'text'})`))
-      )
-    );
-  }
-  if (item.type === 'date'){
-    return el('div', {},
-      el('label', {}, 'Date format'),
-      el('input', { class:'input', value: item.format || '%Y-%m-%d', oninput:(e)=>{ item.format = e.target.value; } })
-    );
-  }
-  // clipboard and uuid need no edit
-  return el('div', {}, el('div', { class:'small' }, 'No options for this element'));
 }
 
 function composerPreview(){
   return el('div', { class:'card' },
     el('div', { class:'small' }, 'Preview (template)'),
-    el('textarea', { class:'input', readonly:true }, buildReplacement())
+    el('textarea', { class:'input big', readonly:true }, buildReplacement())
   );
 }
 
@@ -178,14 +179,27 @@ function composerControls(){
   );
 }
 
+function library(){
+  const wrap = el('div', { class:'card' }, el('h3', {}, 'Library'));
+  const grid = el('div', { class:'grid cols-3' },
+    ...SAMPLE_EXPANSIONS.map(ex => el('div', { class:'card' },
+      el('strong', {}, ex.name),
+      el('div', { class:'row' },
+        el('button', { class:'btn secondary', onclick: ()=>{ wizard.open = true; wizard.elements = ex.elements.map(x=>({...x})); wizard.step = 3; setState({}); } }, 'Load into composer')
+      )
+    ))
+  );
+  wrap.appendChild(grid);
+  return wrap;
+}
+
 function composer(){
   if (!wizard.open) return null;
   return el('div', { class:'card' },
     el('h3', {}, wizard.editingId ? 'Edit Expansion' : 'New Expansion'),
     Stepper(),
     wizard.step === 1 ? elementPicker() : null,
-    wizard.step === 2 ? elementEditor() : null,
-    new Array().length, // no-op to keep structure stable
+    wizard.step === 2 ? el('div', { class:'small' }, 'Editor opened in modal. Close it to continue.') : null,
     el('div', { class:'divider' }),
     composerPreview(),
     composerControls()
@@ -198,6 +212,7 @@ export function render(){
   wrap.appendChild(toolbar());
   const c = composer();
   if (c) wrap.appendChild(c);
+  wrap.appendChild(library());
   wrap.appendChild(list());
   return wrap;
 }

@@ -1,28 +1,86 @@
 // ui/utils.js
+// Minimal reactive store, DOM helpers, modal, theme, and shared UI bits.
+
 export const appEl = () => document.getElementById('app');
+
 export function el(tag, attrs = {}, ...children){
   const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)){
+  for (const [k, v] of Object.entries(attrs || {})){
     if (k === 'class') e.className = v;
     else if (k === 'html') e.innerHTML = v;
     else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2).toLowerCase(), v);
     else e.setAttribute(k, v);
   }
-  for (const c of children){ if (c == null) continue; e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); }
+  for (const c of children){
+    if (c == null) continue;
+    if (c instanceof Node) { e.appendChild(c); continue; }
+    e.appendChild(document.createTextNode(String(c)));
+  }
   return e;
 }
+
 export async function rpc(type, payload){
   const res = await chrome.runtime.sendMessage({ type, ...payload });
   if (!res || !res.ok) throw new Error((res && res.error) || 'RPC failed');
   return res;
 }
+
+/* ---------- Reactive store ---------- */
+const subscribers = new Set();
 const store = {
-  state: { tab: (location.hash && location.hash.slice(1)) || 'expansions', data: null, prompts: null, menu: null, filter: '', toast: null },
-  set(p){ this.state = Object.assign({}, this.state, p); },
+  state: {
+    tab: (location.hash && location.hash.slice(1)) || 'expansions',
+    data: null,
+    prompts: null,
+    menu: null,
+    promptData: null,
+    filter: '',
+    toast: null
+  },
+  set(p){
+    this.state = Object.assign({}, this.state, p || {});
+    for (const fn of subscribers) {
+      try { fn(this.state); } catch {}
+    }
+  },
   get(){ return this.state; }
 };
+
 export const getState = () => store.get();
 export const setState = (p) => store.set(p);
+export const subscribe = (fn) => { subscribers.add(fn); return () => subscribers.delete(fn); };
+
+/* ---------- Focus preservation during re-render ---------- */
+function captureFocusMarker(){
+  const a = document.activeElement;
+  if (!a) return null;
+  const key = a.getAttribute && a.getAttribute('data-focus-key');
+  if (!key) return null;
+  let pos = null;
+  try {
+    if (typeof a.selectionStart === 'number' && typeof a.selectionEnd === 'number') {
+      pos = { start: a.selectionStart, end: a.selectionEnd };
+    }
+  } catch {}
+  return { key, pos };
+}
+function restoreFocusMarker(marker){
+  if (!marker) return;
+  const elTarget = document.querySelector(`[data-focus-key="${marker.key}"]`);
+  if (!elTarget) return;
+  try {
+    elTarget.focus();
+    if (marker.pos && typeof elTarget.setSelectionRange === 'function') {
+      elTarget.setSelectionRange(marker.pos.start, marker.pos.end);
+    }
+  } catch {}
+}
+export function renderWithFocus(fn){
+  const marker = captureFocusMarker();
+  try { fn(); } finally { restoreFocusMarker(marker); }
+}
+
+/* ---------- Toast ---------- */
 export function showToast(msg){
   setState({ toast: msg });
   renderToast();
@@ -35,33 +93,58 @@ function renderToast(){
   if (!s.toast) return;
   document.body.appendChild(el('div', { class:'toast' }, s.toast));
 }
+
+/* ---------- Modal ---------- */
+export function openModal(opts){
+  const { title, body, actions } = opts || {};
+  const backdrop = el('div', { class: 'modal-backdrop', id: 'tf-modal' });
+  const modal = el('div', { class: 'modal glass' });
+  const header = el('div', { class: 'modal-header' },
+    el('h3', {}, title || 'Edit'),
+    el('button', { class:'btn secondary', onclick: closeModal }, 'Close')
+  );
+  const content = el('div', { class: 'modal-body' });
+  if (body) content.appendChild(body);
+  const footer = el('div', { class: 'modal-footer' });
+  if (Array.isArray(actions)) actions.forEach(a => footer.appendChild(a));
+  modal.appendChild(header);
+  modal.appendChild(content);
+  modal.appendChild(footer);
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+  setTimeout(()=> backdrop.classList.add('show'), 0);
+  try { modal.querySelector('textarea, input, select')?.focus(); } catch {}
+}
+export function closeModal(){
+  const node = document.getElementById('tf-modal');
+  if (!node) return;
+  node.classList.remove('show');
+  setTimeout(()=> node.remove(), 120);
+}
+
+/* ---------- Theme ---------- */
 export function injectTheme(){
   if (document.getElementById('tf-theme')) return;
   const css = `
-:root{ --tf-accent:#6aa9ff; --tf-accent-2:#a78bfa; --tf-glass-bg:rgba(255,255,255,0.88); --tf-glass-blur:saturate(1.3) blur(6px); }
-.tab{ background:rgba(255,255,255,0.86); }
-.tab.active{ background:linear-gradient(135deg, var(--tf-glass-bg), #ffffff); border-color:rgba(0,0,0,.14); }
-.btn{ background:linear-gradient(135deg, var(--tf-accent), var(--tf-accent-2)); border:0; color:#fff; }
-.btn.secondary{ background:linear-gradient(135deg,#475569,#1f2937); color:#fff; }
-.card{ background:rgba(255,255,255,.96); backdrop-filter:var(--tf-glass-blur); border:1px solid rgba(0,0,0,.16); box-shadow:0 8px 24px rgba(0,0,0,.08); }
-.badge{ background:rgba(106,169,255,.18); color:#1e40af; }
-.field.drag-over{ outline:2px dashed var(--tf-accent); outline-offset:2px; }
-.input, select, textarea{ background:#fff; border:1px solid rgba(0,0,0,.2); }
-.input:focus, select:focus, textarea:focus{ outline:3px solid rgba(106,169,255,.35); border-color:rgba(106,169,255,.6); }
-.canvas{ border-color:rgba(37,99,235,0.62); }
-.palette .item{ border-color:rgba(0,0,0,.28); }
-.palette .item:hover{ background:rgba(255,255,255,.96); }
-#contextMenu{ position:absolute; z-index:9999; background:rgba(255,255,255,.98); backdrop-filter:var(--tf-glass-blur); border:1px solid rgba(0,0,0,.16); border-radius:10px; padding:6px; box-shadow:0 10px 28px rgba(0,0,0,.12); }
-#contextMenu.hidden{ display:none; }
-#contextMenu ul{ list-style:none; margin:0; padding:0; }
-#contextMenu li{ padding:6px 10px; cursor:pointer; border-radius:8px; }
-#contextMenu li:hover{ background:rgba(106,169,255,.18); }
+:root{
+  --tf-accent:#6aa9ff;
+  --tf-accent-2:#a78bfa;
+  --tf-bg-1:#0f172a;
+  --tf-bg-2:#1f2937;
+  --tf-card:#1f2937;
+  --tf-text:#e5e7eb;
+  --tf-text-weak:#9ca3af;
+  --tf-focus: rgba(59,130,246,.35);
+}
+.tab{ display:none; } /* old top tabs hidden */
 `;
   const style = document.createElement('style');
   style.id = 'tf-theme';
   style.textContent = css;
   document.head.appendChild(style);
 }
+
+/* ---------- Context menu helpers ---------- */
 export function openContextMenu(x, y, items){
   const menu = document.getElementById('contextMenu');
   const list = document.getElementById('contextMenuItems');
@@ -78,10 +161,18 @@ export function closeContextMenu(){
   const menu = document.getElementById('contextMenu');
   if (menu) menu.classList.add('hidden');
 }
+
+/* ---------- Toolbar and helpers ---------- */
 export function Toolbar(actions){
   const s = getState();
   return el('div', { class:'row between' },
-    el('input', { class:'input', placeholder:'Filter...', value: s.filter, oninput:(e)=>{ setState({ filter: e.target.value }); if (actions && actions.onFilter) actions.onFilter(e.target.value); } }),
+    el('input', {
+      class:'input',
+      placeholder:'Filter...',
+      value: s.filter,
+      'data-focus-key':'tf-filter',
+      oninput:(e)=>{ setState({ filter: e.target.value }); }
+    }),
     el('div', { class:'row' }, ...(actions && actions.buttons ? actions.buttons : []))
   );
 }
