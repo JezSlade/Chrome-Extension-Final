@@ -1,47 +1,55 @@
 // ui/modules/variables.js
-import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu, openModal, closeModal } from '../utils.js';
+import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu, openModal, closeModal, withSidebar, MarkdownEditor, triggerAutoSyncPush, WizardStepper } from '../utils.js';
 
 export const id = 'variables';
 export const label = 'Variables';
 
 // Wizard state
-let wizard = { open:false, step:1, draft:{ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null }, _openedEditor:false };
-
-// Showcase examples
-const SAMPLE_VARIABLES = [
-  { name:'today', type:'formatDate', default:'%Y-%m-%d' },
-  { name:'clipboard', type:'text', default:'{{clipboard}}' },
-  { name:'user', type:'text', default:'{{env.USER}}' },
-  { name:'uuid', type:'text', default:'{{uuid}}' }
-];
+let wizard = { open:false, step:1, draft:{ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null, id:null }, _openedEditor:false };
 
 function header(){
   return el('div', { class:'card' },
     el('h3', {}, 'Variables'),
-    el('div', { class:'small' }, 'Tokens include static {{name}}, {{date:+%Y-%m-%d}}, {{clipboard}}, {{env.KEY}}, {{output:url}}, {{input:Label}}, {{uuid}}, {{cursor}}, {{if var}}...{{endif}}, and regex captures like {{match_1}}.')
+    el('div', { class:'small' }, 'Tokens: {{name}}, {{date:+%Y-%m-%d}}, {{clipboard}}, {{env.KEY}}, {{output:cmd}}, {{input:Label}}, {{uuid}}, {{cursor}}, {{if var}}...{{endif}}, {{match_1}}.')
   );
 }
 
 function toolbar(){
   return Toolbar({ buttons: [ el('button', { class:'btn', onclick: startWizard }, 'New Variable') ] });
 }
-function startWizard(){
-  wizard = { open:true, step:1, draft:{ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null }, _openedEditor:false };
+function startWizard(prefill){
+  wizard = { open:true, step:1, draft:Object.assign({ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null, id:null }, prefill||{}), _openedEditor:false };
+  openVariableWizardModal();
   setState({});
 }
 
 async function saveWizard(){
   const d = wizard.draft;
   if (!d.name.trim()){ showToast('Name required'); return; }
-  await rpc('ADD_VARIABLE', { item: d });
-  wizard = { open:false, step:1, draft:{ name:'', type:'text', default:'', options:[] }, _openedEditor:false };
+  if (d.id){
+    await rpc('UPDATE_VARIABLE', { id: d.id, patch: d });
+  } else {
+    const res = await rpc('ADD_VARIABLE', { item: d });
+    if (res && res.id) d.id = res.id;
+  }
+  wizard = { open:false, step:1, draft:{ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null, id:null }, _openedEditor:false };
   const st = await rpc('GET_STATE');
   setState({ data: st.data });
+  triggerAutoSyncPush();
   showToast('Saved');
 }
 
-async function updateVariable(id, patch){ await rpc('UPDATE_VARIABLE', { id, patch }); }
-async function deleteVariable(id){ await rpc('DELETE_VARIABLE', { id }); const st = await rpc('GET_STATE'); setState({ data: st.data }); showToast('Deleted'); }
+async function updateVariable(id, patch){
+  await rpc('UPDATE_VARIABLE', { id, patch });
+  triggerAutoSyncPush();
+}
+async function deleteVariable(id){
+  await rpc('DELETE_VARIABLE', { id });
+  const st = await rpc('GET_STATE');
+  setState({ data: st.data });
+  triggerAutoSyncPush();
+  showToast('Deleted');
+}
 
 function list(){
   const items = applyFilter(getState().data.variables || []);
@@ -49,7 +57,10 @@ function list(){
 }
 
 function card(it){
-  const cm = [ { label:'Delete', onClick: ()=> deleteVariable(it.id) } ];
+  const cm = [
+    { label:'Edit (wizard)', onClick: ()=> startWizard(it) },
+    { label:'Delete', onClick: ()=> deleteVariable(it.id) }
+  ];
   const typeInput = el('input', { class:'input', list:'varTypes', value: it.type || 'text', oninput:(e)=> updateVariable(it.id, { type: e.target.value }) });
   const typeList = datalist();
 
@@ -77,14 +88,14 @@ function card(it){
     ext.push(sel);
   }
   if (it.type === 'formatDate'){
-    ext.push(el('div', { class:'small' }, 'Format string'));
+    ext.push(el('div', { class:'small' }, 'Format tokens: %Y year, %m month, %d day. Example: %Y-%m-%d.'));
     ext.push(el('input', { class:'input', value: it.default || '%Y-%m-%d', oninput:(e)=> updateVariable(it.id, { default: e.target.value }) }));
   }
 
-  return el('div', { class:'card', oncontextmenu:(e)=>{ openContextMenu(e.pageX, e.pageY, cm); } },
+  return el('div', { class:'card', oncontextmenu:(e)=>{ e.preventDefault(); openContextMenu(e.pageX, e.pageY, cm); } },
     el('div', { class:'row between' },
       el('div', { class:'row' }, el('span', { class:'badge' }, it.type||'text'), el('span', { class:'small' }, `#${it.id}`)),
-      el('div', {}, el('button', { class:'btn secondary', onclick: ()=> deleteVariable(it.id) }, 'Delete'))
+      el('div', {}, el('button', { class:'btn secondary', onclick: ()=> startWizard(it) }, 'Edit'), el('button', { class:'btn secondary', onclick: ()=> deleteVariable(it.id) }, 'Delete'))
     ),
     el('div', { class:'row' },
       el('input', { class:'input', value: it.name, oninput:(e)=> updateVariable(it.id, { name: e.target.value }) }),
@@ -120,29 +131,26 @@ function Stepper(){
     { n:2, label:'Type' },
     { n:3, label:'Content' }
   ];
-  return el('div', { class:'stepper' },
-    ...steps.map(s => el('div', { class:'step' + (wizard.step === s.n ? ' active' : '') }, `${s.n}. ${s.label}`))
-  );
+  return WizardStepper(steps, wizard.step);
 }
 
-function openContentEditorModal(){
+function openContentEditorWithin(body){
   const d = wizard.draft;
-  const body = el('div', {});
   body.appendChild(el('label', {}, 'Default value or pattern'));
-  body.appendChild(el('textarea', { class:'input big', value:d.default||'', oninput:(e)=>{ d.default = e.target.value; } }, d.default||''));
+  body.appendChild(MarkdownEditor({ value:d.default||'', oninput:(v)=>{ d.default = v; } }));
   if (d.type === 'select'){
     body.appendChild(el('div', { class:'small' }, 'Options (comma separated)'));
-    body.appendChild(el('input', { class:'input', placeholder:'one, two, three', oninput:(e)=>{ d.options = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); } }));
+    body.appendChild(el('input', { class:'input', placeholder:'one, two, three', value:(d.options||[]).join(', '), oninput:(e)=>{ d.options = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); } }));
   }
   if (d.type === 'formatDate'){
-    body.appendChild(el('div', { class:'small' }, 'Format like %Y-%m-%d'));
+    body.appendChild(el('div', { class:'small' }, 'Format tokens: %Y year, %m month, %d day. Example: %Y-%m-%d.'));
   }
   if (d.type === 'form'){
     const forms = getState().data.forms || [];
     body.appendChild(el('div', { class:'small' }, 'Linked form'));
     body.appendChild(el('select', { class:'input', onchange:(e)=>{ d.linkedFormId = Number(e.target.value)||null; } },
       el('option', { value:'' }, 'Select form...'),
-      ...forms.map(f => el('option', { value:String(f.id) }, `#${f.id} ${f.name}`))
+      ...forms.map(f => el('option', { value:String(f.id), selected:d.linkedFormId===f.id }, `#${f.id} ${f.name}`))
     ));
   }
   if (d.type === 'prompt'){
@@ -150,85 +158,73 @@ function openContentEditorModal(){
     body.appendChild(el('div', { class:'small' }, 'Linked prompt'));
     body.appendChild(el('select', { class:'input', onchange:(e)=>{ d.linkedPromptId = Number(e.target.value)||null; } },
       el('option', { value:'' }, 'Select saved prompt...'),
-      ...prompts.map(p => el('option', { value:String(p.id) }, `#${p.id} ${p.name}`))
+      ...prompts.map(p => el('option', { value:String(p.id), selected:d.linkedPromptId===p.id }, `#${p.id} ${p.name}`))
     ));
   }
+}
+
+function openVariableWizardModal(){
+  const box = el('div', {});
+  box.appendChild(Stepper());
+  const name = el('div', {},
+    el('label', {}, 'Variable name'),
+    el('input', { class:'input', placeholder:'e.g. customer_name', value: wizard.draft.name, oninput:(e)=>{ wizard.draft.name = e.target.value; } }),
+    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ if (!wizard.draft.name.trim()) return; wizard.step = 2; rerender(); } }, 'Next'))
+  );
+  const type = el('div', {},
+    el('label', {}, 'Type'),
+    el('select', { class:'input', onchange:(e)=>{ wizard.draft.type = e.target.value; } },
+      ...['text','textarea','number','date','select','prompt','file','form','formatDate','boolean','json'].map(t => el('option', { value:t, selected: wizard.draft.type===t }, t))
+    ),
+    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ wizard.step = 3; rerender(); } }, 'Next'))
+  );
+  const content = el('div', {}); openContentEditorWithin(content);
+
+  const stepWrap = el('div', {});
+  function rerender(){
+    stepWrap.innerHTML = '';
+    stepWrap.appendChild(Stepper());
+    stepWrap.appendChild(wizard.step===1 ? name : wizard.step===2 ? type : content);
+  }
+  rerender();
 
   openModal({
-    title: 'Variable Content',
-    body,
+    title: wizard.draft.id ? 'Edit Variable' : 'New Variable',
+    body: stepWrap,
     actions: [
       el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
-      el('button', { class:'btn', onclick: ()=>{ closeModal(); } }, 'Apply')
+      el('button', { class:'btn', onclick: ()=>{ saveWizard().then(()=> closeModal()); } }, 'Save')
     ]
   });
 }
 
-function wizardView(){
-  if (!wizard.open) return null;
-  return el('div', { class:'card' },
-    el('h3', {}, 'New Variable'),
-    Stepper(),
-    wizard.step === 1 ? nameStep() : null,
-    wizard.step === 2 ? typeStep() : null,
-    wizard.step === 3 ? contentStep() : null,
-    el('div', { class:'divider' }),
-    el('div', { class:'row' },
-      el('button', { class:'btn secondary', onclick: ()=>{ wizard.open=false; setState({}); } }, 'Cancel'),
-      el('button', { class:'btn', onclick: saveWizard }, 'Save')
-    )
-  );
-}
-
-function nameStep(){
-  return el('div', {},
-    el('label', {}, 'Variable name'),
-    el('input', { class:'input', placeholder:'e.g. customer_name', 'data-focus-key':'var-name', value: wizard.draft.name, oninput:(e)=>{ wizard.draft.name = e.target.value; } }),
-    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ if (!wizard.draft.name.trim()) return; wizard.step = 2; setState({}); } }, 'Next'))
-  );
-}
-
-function typeStep(){
-  const types = ['text','textarea','number','date','select','prompt','file','form','formatDate','boolean','json'];
-  return el('div', {},
-    el('label', {}, 'Type'),
-    el('select', { class:'input', onchange:(e)=>{ wizard.draft.type = e.target.value; } },
-      ...types.map(t => el('option', { value:t, selected: wizard.draft.type===t }, t))
-    ),
-    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ wizard.step = 3; wizard._openedEditor=false; setState({}); } }, 'Next'))
-  );
-}
-
-function contentStep(){
-  if (!wizard._openedEditor){
-    wizard._openedEditor = true;
-    setTimeout(()=> openContentEditorModal(), 0);
-  }
-  return el('div', { class:'small' }, 'Content editor is open in a modal.');
-}
-
-function library(){
+function librarySidebar(){
+  const list = applyFilter(getState().data.variables || []);
   const wrap = el('div', { class:'card' }, el('h3', {}, 'Library'));
-  const grid = el('div', { class:'grid cols-3' },
-    ...SAMPLE_VARIABLES.map(v => el('div', { class:'card' },
-      el('strong', {}, v.name),
-      el('div', { class:'small' }, `Type: ${v.type}`),
-      el('div', { class:'row' },
-        el('button', { class:'btn secondary', onclick: ()=>{ wizard.open = true; wizard.step = 3; wizard.draft = { ...v }; wizard._openedEditor=false; setState({}); } }, 'Load into editor')
-      )
-    ))
-  );
-  wrap.appendChild(grid);
+  if (!list.length){
+    wrap.appendChild(el('div', { class:'small' }, 'No variables yet.'));
+    return wrap;
+  }
+  list.forEach(v=>{
+    wrap.appendChild(el('div', { class:'row' },
+      el('button', { class:'btn secondary', onclick: ()=> startWizard(v) }, `${v.name}  #${v.id}`)
+    ));
+  });
   return wrap;
+}
+
+function wizardHint(){
+  return el('div', { class:'card' },
+    el('h3', {}, 'Wizard'),
+    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=> startWizard() }, 'Open variable wizard'))
+  );
 }
 
 export function render(){
-  const wrap = el('div', {});
-  wrap.appendChild(header());
-  wrap.appendChild(toolbar());
-  const w = wizardView();
-  if (w) wrap.appendChild(w);
-  wrap.appendChild(library());
-  wrap.appendChild(list());
-  return wrap;
+  const main = el('div', {});
+  main.appendChild(header());
+  main.appendChild(toolbar());
+  main.appendChild(wizardHint());
+  main.appendChild(list());
+  return withSidebar(librarySidebar(), main);
 }

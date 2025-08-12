@@ -1,11 +1,18 @@
 // ui/modules/prompts.js
-import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openModal, closeModal } from '../utils.js';
+import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openModal, closeModal, withSidebar, MarkdownEditor, triggerAutoSyncPush, WizardStepper } from '../utils.js';
 
 export const id = 'prompts';
 export const label = 'Prompts';
 
 function toolbar(){ return Toolbar({ buttons: [] }); }
-async function addPrompt(item){ const { id } = await rpc('ADD_PROMPT', { item }); const pr = await rpc('LIST_PROMPTS'); setState({ prompts: pr.items }); showToast('Saved'); return id; }
+async function addPrompt(item){
+  const { id } = await rpc('ADD_PROMPT', { item });
+  const pr = await rpc('LIST_PROMPTS');
+  setState({ prompts: pr.items });
+  triggerAutoSyncPush();
+  showToast('Saved');
+  return id;
+}
 
 function variablePicker(onPick){
   return el('select', { onchange:(e)=>{ const v = e.target.value; if (v) onPick(v); e.target.selectedIndex = 0; } },
@@ -20,6 +27,7 @@ let wiz = {
   persona: 'Market Analyst',
   templateId: 'forecast_prompt',
   values: {},
+  tplOverrides: { user: null },
   open: true
 };
 
@@ -43,22 +51,34 @@ function Stepper(){
     { n:3, label:'Fields' },
     { n:4, label:'Review' }
   ];
-  return el('div', { class:'stepper' },
-    ...steps.map(s => el('div', { class:'step' + (wiz.step === s.n ? ' active' : '') }, `${s.n}. ${s.label}`))
-  );
+  return WizardStepper(steps, wiz.step);
 }
 
 function openPersonaModal(){
   const body = el('div', {});
   body.appendChild(el('label', {}, 'System prompt for persona'));
-  const ta = el('textarea', { class:'input big' }, personaDefaults[wiz.persona] || '');
-  ta.oninput = (e)=>{ personaDefaults[wiz.persona] = e.target.value; };
+  body.appendChild(MarkdownEditor({ value: personaDefaults[wiz.persona] || '', oninput:(v)=>{ personaDefaults[wiz.persona] = v; } }));
   openModal({
     title: `Persona Defaults - ${wiz.persona}`,
     body,
     actions: [
       el('button', { class:'btn secondary', onclick: closeModal }, 'Close'),
       el('button', { class:'btn', onclick: ()=>{ closeModal(); } }, 'Save')
+    ]
+  });
+}
+
+function openTemplateEditModal(tpl){
+  const body = el('div', {});
+  const currentUser = wiz.tplOverrides.user != null ? wiz.tplOverrides.user : tpl.user;
+  body.appendChild(el('label', {}, 'Template text (USER)'));
+  body.appendChild(MarkdownEditor({ value: currentUser || '', oninput:(v)=>{ wiz.tplOverrides.user = v; } }));
+  openModal({
+    title: 'Edit Template Copy',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: ()=>{ wiz.tplOverrides.user = null; closeModal(); setState({}); } }, 'Reset'),
+      el('button', { class:'btn', onclick: ()=>{ closeModal(); setState({}); } }, 'Apply')
     ]
   });
 }
@@ -77,16 +97,19 @@ function personaStep(){
 }
 
 function templateStep(tplMap){
+  const tpl = tplMap[wiz.templateId];
   return el('div', {},
     el('label', {}, 'Template'),
-    el('select', { class:'input', onchange:(e)=>{ wiz.templateId = e.target.value; } },
+    el('select', { class:'input', onchange:(e)=>{ wiz.templateId = e.target.value; wiz.tplOverrides.user = null; } },
       ...Object.entries(tplMap).map(([k,v]) => el('option', { value:k, selected: wiz.templateId===k }, v.label || k))
     ),
-    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ wiz.step = 3; setState({}); } }, 'Next'))
+    el('div', { class:'row' },
+      el('button', { class:'btn secondary', onclick: ()=> openTemplateEditModal(tpl) }, 'Edit template text'),
+      el('button', { class:'btn', onclick: ()=>{ wiz.step = 3; setState({}); } }, 'Next')
+    )
   );
 }
 
-// Repaired and modal-friendly fieldsStep
 function fieldsStep(tpl) {
   const container = el('div', { class: 'grid cols-3' });
   if (!wiz) wiz = {};
@@ -116,9 +139,7 @@ function fieldsStep(tpl) {
         multiple: true,
         class: 'input',
         onchange: function (e) {
-          setVal(Array.from(e.target.selectedOptions).map(function (o) {
-            return o.value;
-          }));
+          setVal(Array.from(e.target.selectedOptions).map(function (o) { return o.value; }));
         }
       },
         ...def.values.map(function (v) {
@@ -131,18 +152,8 @@ function fieldsStep(tpl) {
 
     } else {
       body.appendChild(el('label', {}, def.label || name));
-      const input = el('textarea', {
-        class: 'input big',
-        value: ((wiz.values[name] ?? def.default) || '')
-      });
-      input.oninput = function (e) { setVal(e.target.value); };
-      body.appendChild(input);
-      body.appendChild(el('div', { class: 'row' },
-        variablePicker(function (val) {
-          input.value = val;
-          setVal(val);
-        })
-      ));
+      body.appendChild(MarkdownEditor({ value: ((wiz.values[name] ?? def.default) || ''), oninput:(v)=> setVal(v) }));
+      body.appendChild(el('div', { class: 'row' }, variablePicker(function (val) { setVal(val); })));
     }
 
     openModal({
@@ -171,16 +182,14 @@ function fieldsStep(tpl) {
   return el('div', {},
     container,
     el('div', { class: 'row' },
-      el('button', {
-        class: 'btn',
-        onclick: function () { wiz.step = 4; setState({}); }
-      }, 'Next')
+      el('button', { class: 'btn', onclick: function () { wiz.step = 4; setState({}); } }, 'Next')
     )
   );
 }
 
 function renderTemplateText(tpl){
-  let text = tpl.user;
+  const userText = wiz.tplOverrides.user != null ? wiz.tplOverrides.user : tpl.user;
+  let text = userText;
   for (const [k,v] of Object.entries(wiz.values || {})){
     const val = Array.isArray(v) ? v.join(', ') : v;
     text = text.replaceAll('{'+k+'}', String(val));
@@ -229,50 +238,38 @@ function wizardView(){
   return box;
 }
 
-/* Library - sample prompts using persona defaults */
-const SAMPLE_PROMPTS = [
-  { name:'Analyst quick take', persona:'Market Analyst', templateId:'forecast_prompt', values:{ ticker:'AAPL', price_range:'160 to 190', float_size:'high' } },
-  { name:'Tech writer outline', persona:'Technical Writer', templateId:'forecast_prompt', values:{ ticker:'SDK', price_range:'n/a', trade_type:'day' } }
-];
-
-function library(){
-  const wrap = el('div', { class:'card' }, el('h3', {}, 'Library'));
-  const grid = el('div', { class:'grid cols-3' },
-    ...SAMPLE_PROMPTS.map(p => el('div', { class:'card' },
-      el('strong', {}, p.name),
-      el('div', { class:'small' }, `Persona: ${p.persona}`),
-      el('div', { class:'row' },
-        el('button', { class:'btn secondary', onclick: ()=>{ wiz.open = true; wiz.step = 4; wiz.persona = p.persona; wiz.templateId = p.templateId; wiz.values = { ...(p.values||{}) }; setState({}); } }, 'Load to review')
-      )
-    ))
-  );
-  wrap.appendChild(grid);
+/* Sidebar: templates and saved */
+function templatesSidebar(){
+  const state = getState();
+  const tplMap = (state.promptData && state.promptData.templates) || {};
+  const wrap = el('div', { class:'card' }, el('h3', {}, 'Templates'));
+  const keys = Object.keys(tplMap);
+  if (!keys.length){ wrap.appendChild(el('div', { class:'small' }, 'No templates found.')); return wrap; }
+  keys.forEach(k=>{
+    const v = tplMap[k];
+    wrap.appendChild(el('div', { class:'row' },
+      el('button', { class:'btn secondary', onclick: ()=>{ wiz.templateId = k; wiz.step = 3; wiz.tplOverrides.user = null; setState({}); } }, v.label || k)
+    ));
+  });
   return wrap;
 }
-
-/* Library of saved prompts remains below */
-function librarySaved(){
+function savedSidebar(){
   const items = applyFilter(getState().prompts || []);
-  return el('div', { class:'grid cols-2 list' }, ...items.map(p => el('div', { class:'card' },
-    el('div', { class:'row between' },
-      el('strong', {}, p.name),
-      el('div', {},
-        el('button', { class:'btn secondary', onclick: async ()=>{ await navigator.clipboard.writeText(p.rendered||''); showToast('Copied'); } }, 'Copy'),
-        el('button', { class:'btn secondary', onclick: async ()=>{ await rpc('DELETE_PROMPT', { id: p.id }); const pr = await rpc('LIST_PROMPTS'); setState({ prompts: pr.items }); showToast('Deleted'); } }, 'Delete')
-      )
-    ),
-    el('textarea', {}, p.rendered||'')
-  )));
+  const wrap = el('div', { class:'card' }, el('h3', {}, 'Saved'));
+  if (!items.length){ wrap.appendChild(el('div', { class:'small' }, 'No saved prompts.')); return wrap; }
+  items.forEach(p=>{
+    wrap.appendChild(el('div', { class:'row' },
+      el('button', { class:'btn secondary', onclick: ()=>{ wiz.open = true; wiz.step = 4; wiz.persona = p.persona || 'Market Analyst'; wiz.templateId = p.templateId; wiz.values = { ...(p.values||{}) }; setState({}); } }, p.name)
+    ));
+  });
+  return wrap;
 }
 
 export function render(){
-  const wrap = el('div', {});
-  wrap.appendChild(el('div', { class:'card' }, el('h3', {}, 'Prompts')));
-  wrap.appendChild(toolbar());
-  wrap.appendChild(wizardView());
-  wrap.appendChild(el('hr', { class:'divider' }));
-  wrap.appendChild(library());
-  wrap.appendChild(el('hr', { class:'divider' }));
-  wrap.appendChild(librarySaved());
-  return wrap;
+  const main = el('div', {});
+  main.appendChild(el('div', { class:'card' }, el('h3', {}, 'Prompts')));
+  main.appendChild(toolbar());
+  main.appendChild(wizardView());
+  const sidebar = el('div', {}, templatesSidebar(), el('div', { class:'divider' }), savedSidebar());
+  return withSidebar(sidebar, main);
 }

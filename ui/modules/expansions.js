@@ -1,5 +1,5 @@
 // ui/modules/expansions.js
-import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu, openModal, closeModal } from '../utils.js';
+import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu, openModal, closeModal, withSidebar, MarkdownEditor, triggerAutoSyncPush, WizardStepper } from '../utils.js';
 
 export const id = 'expansions';
 export const label = 'Expansions';
@@ -12,15 +12,6 @@ let wizard = {
   step: 1
 };
 
-// Showcase library - local examples for demo and quick start
-const SAMPLE_EXPANSIONS = [
-  { name:'Email signature', elements:[{type:'text', value:'Best regards,\\nJohn Doe\\n{{env.USER}}'}] },
-  { name:'Current date', elements:[{type:'date', format:'%Y-%m-%d'}] },
-  { name:'Clipboard paste', elements:[{type:'clipboard'}] },
-  { name:'UUID', elements:[{type:'uuid'}] },
-  { name:'Regex capture example', elements:[{type:'text', value:'Matched: {{match_1}}'}] }
-];
-
 function toolbar(){
   return Toolbar({
     buttons: [
@@ -31,6 +22,7 @@ function toolbar(){
 
 function startNew(){
   wizard = { open: true, editingId: null, elements: [], step: 1 };
+  openExpansionWizardModal('New Expansion');
   setState({});
 }
 
@@ -39,6 +31,7 @@ async function editExisting(exp){
     ? exp.composer
     : [{ type: 'text', value: String(exp.replacement || '') }];
   wizard = { open: true, editingId: exp.id, elements: base.map(x => ({...x})), step: 1 };
+  openExpansionWizardModal('Edit Expansion');
   setState({});
 }
 
@@ -68,11 +61,21 @@ async function saveWizard(){
   wizard = { open: false, editingId: null, elements: [], step: 1 };
   const st = await rpc('GET_STATE');
   setState({ data: st.data });
+  triggerAutoSyncPush();
   showToast('Saved');
 }
 
-async function update(id, patch){ await rpc('UPDATE_EXPANSION', { id, patch }); }
-async function remove(id){ await rpc('DELETE_EXPANSION', { id }); const st = await rpc('GET_STATE'); setState({ data: st.data }); showToast('Deleted'); }
+async function update(id, patch){
+  await rpc('UPDATE_EXPANSION', { id, patch });
+  triggerAutoSyncPush();
+}
+async function remove(id){
+  await rpc('DELETE_EXPANSION', { id });
+  const st = await rpc('GET_STATE');
+  setState({ data: st.data });
+  triggerAutoSyncPush();
+  showToast('Deleted');
+}
 
 function list(){
   const items = applyFilter(getState().data.expansions || []);
@@ -81,11 +84,11 @@ function list(){
 
 function card(it){
   const cm = [
-    { label:'Edit', onClick: ()=> editExisting(it) },
-    { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: (it.trigger||'')+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); const st = await rpc('GET_STATE'); setState({ data: st.data }); } },
+    { label:'Edit (wizard)', onClick: ()=> editExisting(it) },
+    { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: (it.trigger||'')+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); const st = await rpc('GET_STATE'); setState({ data: st.data }); triggerAutoSyncPush(); } },
     { label:'Delete', onClick: ()=> remove(it.id) }
   ];
-  return el('div', { class:'card', oncontextmenu:(e)=>{ openContextMenu(e.pageX, e.pageY, cm); } },
+  return el('div', { class:'card', oncontextmenu:(e)=>{ e.preventDefault(); openContextMenu(e.pageX, e.pageY, cm); } },
     el('div', { class:'row between' },
       el('div', { class:'row' }, el('span', { class:'badge' }, it.type||'text'), el('span', { class:'small' }, `#${it.id}`)),
       el('div', {},
@@ -116,16 +119,14 @@ function Stepper(){
     { n:2, label:'Edit element' },
     { n:3, label:'Add next or Save' }
   ];
-  return el('div', { class:'stepper' },
-    ...steps.map(s => el('div', { class:'step' + (wizard.step === s.n ? ' active' : '') }, `${s.n}. ${s.label}`))
-  );
+  return WizardStepper(steps, wizard.step);
 }
 
 function openElementEditorModal(item){
   const body = el('div', {});
   if (item.type === 'text'){
     body.appendChild(el('label', {}, 'Text'));
-    body.appendChild(el('textarea', { class:'input big', placeholder:'Enter text...', 'data-focus-key':'exp-composer-text', oninput:(e)=>{ item.value = e.target.value; } }, item.value||''));
+    body.appendChild(MarkdownEditor({ value: item.value || '', oninput:(v)=>{ item.value = v; } }));
   } else if (item.type === 'input'){
     body.appendChild(el('label', {}, 'Prompt label'));
     body.appendChild(el('input', { class:'input', value: item.label || 'Input', 'data-focus-key':'exp-composer-label', oninput:(e)=>{ item.label = e.target.value; } }));
@@ -139,6 +140,9 @@ function openElementEditorModal(item){
   } else if (item.type === 'date'){
     body.appendChild(el('label', {}, 'Date format'));
     body.appendChild(el('input', { class:'input', value: item.format || '%Y-%m-%d', 'data-focus-key':'exp-composer-date', oninput:(e)=>{ item.format = e.target.value; } }));
+    body.appendChild(el('div', { class:'small' },
+      'Format tokens: %Y year 4-digit, %m month 2-digit, %d day, %H hour, %M minute, %S second. Example: %Y-%m-%d.'
+    ));
   } else {
     body.appendChild(el('div', { class:'small' }, 'No options for this element'));
   }
@@ -179,22 +183,22 @@ function composerControls(){
   );
 }
 
-function library(){
-  const wrap = el('div', { class:'card' }, el('h3', {}, 'Library'));
-  const grid = el('div', { class:'grid cols-3' },
-    ...SAMPLE_EXPANSIONS.map(ex => el('div', { class:'card' },
-      el('strong', {}, ex.name),
-      el('div', { class:'row' },
-        el('button', { class:'btn secondary', onclick: ()=>{ wizard.open = true; wizard.elements = ex.elements.map(x=>({...x})); wizard.step = 3; setState({}); } }, 'Load into composer')
-      )
-    ))
-  );
-  wrap.appendChild(grid);
-  return wrap;
+function librarySidebar(){
+  const list = applyFilter(getState().data.expansions || []);
+  const side = el('div', { class:'card' }, el('h3', {}, 'Library'));
+  if (!list.length){
+    side.appendChild(el('div', { class:'small' }, 'No expansions yet.'));
+    return side;
+  }
+  list.forEach(ex => {
+    side.appendChild(el('div', { class:'row' },
+      el('button', { class:'btn secondary', onclick: ()=> editExisting(ex) }, `${ex.trigger || '(no trigger)'}  #${ex.id}`)
+    ));
+  });
+  return side;
 }
 
 function composer(){
-  if (!wizard.open) return null;
   return el('div', { class:'card' },
     el('h3', {}, wizard.editingId ? 'Edit Expansion' : 'New Expansion'),
     Stepper(),
@@ -206,13 +210,24 @@ function composer(){
   );
 }
 
+function openExpansionWizardModal(title){
+  const body = el('div', {}, composer());
+  openModal({
+    title: title || 'Expansion',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Close'),
+      el('button', { class:'btn', onclick: ()=>{ saveWizard().then(()=> closeModal()); } }, 'Save')
+    ]
+  });
+}
+
 export function render(){
-  const wrap = el('div', {});
-  wrap.appendChild(el('div', { class:'card' }, el('h3', {}, 'Expansions')));
-  wrap.appendChild(toolbar());
-  const c = composer();
-  if (c) wrap.appendChild(c);
-  wrap.appendChild(library());
-  wrap.appendChild(list());
-  return wrap;
+  const main = el('div', {});
+  main.appendChild(el('div', { class:'card' }, el('h3', {}, 'Expansions')));
+  main.appendChild(toolbar());
+  main.appendChild(list());
+  const content = el('div', {});
+  content.appendChild(main);
+  return withSidebar(librarySidebar(), content);
 }
