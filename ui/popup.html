@@ -11,7 +11,6 @@
       <img src="../assets/icon48.png" class="logo" alt="logo" />
       <h1>ToolForge</h1>
     </header>
-
     <main class="main glass">
       <div class="row between">
         <div class="row">
@@ -23,7 +22,6 @@
         </div>
         <div id="expCount" class="small">0 expansions • 0 forms • 0 vars</div>
       </div>
-
       <div class="row between">
         <label for="storageArea">Storage</label>
         <select id="storageArea">
@@ -31,31 +29,18 @@
           <option value="local">Local (This Device)</option>
         </select>
       </div>
-
       <div class="row between">
         <label for="autoSync">Auto-sync</label>
         <input id="autoSync" type="checkbox" />
       </div>
-
       <div class="row">
         <a class="btn" id="openManager" href="#">Open Manager</a>
         <a class="btn secondary" id="syncPush" href="#">Push</a>
         <a class="btn secondary" id="syncPull" href="#">Pull</a>
       </div>
-
       <hr />
-
-      <div class="small">
-        Tip: Use triggers like <code>:date</code>. Variables such as <code>{{date}}</code> are supported.
-      </div>
+      <div class="small">Tip: use triggers like <code>:date</code>. Variables like <code>{{date}}</code> are supported.</div>
     </main>
-
     <script src="popup.js"></script>
   </body>
 </html>
-<!--
-CHANGELOG
-2025-08-11 v1.5.0
-- Renamed header to ToolForge
-- Applied glass class to main
--->

@@ -1,43 +1,40 @@
 {
   "manifest_version": 3,
-  "name": "ToolForge - Text Expander and Prompt Builder",
-  "description": "ToolForge: Text expansion, drag-and-drop Form Builder, and AI Prompt Engineer with a library of Expansions, Forms, Variables, and Prompts.",
-  "version": "1.5.0",
+  "name": "ToolForge",
+  "version": "2.0.1",
+  "description": "Form builder, expansion engine, and prompt manager with robust variables.",
   "action": {
     "default_title": "ToolForge",
     "default_popup": "ui/popup.html"
   },
-  "background": { "service_worker": "background.js" },
+  "options_page": "ui/manager.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "clipboardRead"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",
     "128": "assets/icon128.png"
   },
-  "permissions": [
-    "storage",
-    "scripting",
-    "activeTab",
-    "contextMenus"
-  ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/content.js"],
-      "run_at": "document_idle"
-    }
-  ],
-  "host_permissions": ["<all_urls>"],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "ui/manager.html",
-        "ui/manager.css",
-        "ui/manager.js",
-        "ui/popup.css",
-        "ai/ai_persona.yaml",
-        "ai/ai_prompt_engine.yaml"
+      "matches": [
+        "<all_urls>"
       ],
-      "matches": ["<all_urls>"]
+      "js": [
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }
