@@ -296,7 +296,10 @@ export function MarkdownEditor(opts){
     el('button', { class:'btn secondary md', onclick: ()=> wrapSelection(ta, '`','`') }, 'Code'),
     el('button', { class:'btn secondary md', onclick: ()=> wrapSelection(ta, '[','](https://)') }, 'Link')
   );
-  return el('div', {}, bar, ta);
+  const wrap = el('div', {}, bar, ta);
+  // expose textarea to callers that need insertion at cursor
+  wrap._textarea = ta;
+  return wrap;
 }
 
 /* ---------- Sync helpers (shared) ---------- */

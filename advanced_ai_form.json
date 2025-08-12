@@ -1,0 +1,2878 @@
+{
+  "type": "toolforge-import",
+  "version": "1.0.0",
+  "policy": {
+    "dryRun": false,
+    "onConflict": "merge",
+    "dedupe": {
+      "cues": "triggerOrId",
+      "variables": "nameOrId",
+      "formElements": "nameOrId",
+      "aiPrompts": "nameOrId"
+    },
+    "unknownFieldBehavior": "ignore"
+  },
+  "data": {
+    "cues": [
+      {
+        "id": "1fd00f86-69e0-4afe-ad4a-4fbfc99e6ced",
+        "name": "ThanoScan",
+        "trigger": ":scan",
+        "enabled": true,
+        "tags": [
+          "stocks",
+          "ai",
+          "imported"
+        ],
+        "scope": {
+          "domains": [],
+          "apps": [],
+          "hotkey": null
+        },
+        "expand": {
+          "mode": "manual",
+          "caretPlacement": "end",
+          "clipboardFallback": true
+        },
+        "bodyFormat": "markdown",
+        "body": "{{ai:thanolist}}",
+        "variablesUsed": [
+          "ticker",
+          "strategy",
+          "time_horizon",
+          "confidence",
+          "rh_tradable",
+          "exchange",
+          "market_status",
+          "primary_catalyst",
+          "catalyst_detail",
+          "catalyst_recency",
+          "event_date",
+          "news_sentiment",
+          "social_bull_ratio",
+          "social_velocity",
+          "source_quality",
+          "trend_state",
+          "rsi_14",
+          "ma_stack",
+          "ma200_relation",
+          "macd_state",
+          "bb_position",
+          "sr_distance",
+          "gap_status",
+          "vwap_relation",
+          "avg_vol_7d",
+          "dollar_vol",
+          "bid_ask_spread",
+          "float_size",
+          "short_interest_dtc",
+          "darkpool_signal",
+          "atr_pct",
+          "hv_30",
+          "halt_history",
+          "cash_runway",
+          "rev_trend",
+          "earn_surprise",
+          "dilution_risk",
+          "peers_strength",
+          "uoa_flag",
+          "gex_state",
+          "ivrank",
+          "macro_tide",
+          "sector_flow",
+          "vix_regime",
+          "max_portfolio_pct",
+          "stop_style",
+          "rr_min"
+        ],
+        "formElementsUsed": [
+          "ticker",
+          "preset",
+          "time_horizon",
+          "confidence",
+          "market_status",
+          "event_date",
+          "aggression",
+          "risk_pack",
+          "liquidity_pack",
+          "catalyst_pack",
+          "options_pack",
+          "macro_pack"
+        ],
+        "aiPromptsUsed": [
+          "thanolist"
+        ],
+        "createdAt": "2025-08-12T21:09:26Z",
+        "updatedAt": "2025-08-12T21:09:26Z"
+      },
+      {
+        "id": "141a9bfb-e4c2-474e-945a-324708dfbeb2",
+        "name": "TeamShare",
+        "trigger": ":teamshare",
+        "enabled": true,
+        "tags": [
+          "stocks",
+          "team",
+          "imported"
+        ],
+        "scope": {
+          "domains": [],
+          "apps": [],
+          "hotkey": null
+        },
+        "expand": {
+          "mode": "manual",
+          "caretPlacement": "end",
+          "clipboardFallback": true
+        },
+        "bodyFormat": "markdown",
+        "body": "{{ai:team_share}}",
+        "variablesUsed": [
+          "ticker",
+          "strategy",
+          "time_horizon",
+          "confidence",
+          "rh_tradable",
+          "exchange",
+          "market_status",
+          "primary_catalyst",
+          "catalyst_detail",
+          "catalyst_recency",
+          "event_date",
+          "news_sentiment",
+          "social_bull_ratio",
+          "social_velocity",
+          "source_quality",
+          "trend_state",
+          "rsi_14",
+          "ma_stack",
+          "ma200_relation",
+          "macd_state",
+          "bb_position",
+          "sr_distance",
+          "gap_status",
+          "vwap_relation",
+          "avg_vol_7d",
+          "dollar_vol",
+          "bid_ask_spread",
+          "float_size",
+          "short_interest_dtc",
+          "darkpool_signal",
+          "atr_pct",
+          "hv_30",
+          "halt_history",
+          "cash_runway",
+          "rev_trend",
+          "earn_surprise",
+          "dilution_risk",
+          "peers_strength",
+          "uoa_flag",
+          "gex_state",
+          "ivrank",
+          "macro_tide",
+          "sector_flow",
+          "vix_regime",
+          "max_portfolio_pct",
+          "stop_style",
+          "rr_min"
+        ],
+        "formElementsUsed": [
+          "ticker",
+          "preset",
+          "time_horizon",
+          "confidence",
+          "market_status",
+          "event_date",
+          "aggression",
+          "risk_pack",
+          "liquidity_pack",
+          "catalyst_pack",
+          "options_pack",
+          "macro_pack"
+        ],
+        "aiPromptsUsed": [
+          "team_share"
+        ],
+        "createdAt": "2025-08-12T21:09:26Z",
+        "updatedAt": "2025-08-12T21:09:26Z"
+      }
+    ],
+    "variables": [
+      {
+        "id": "a62f0edd-6d6f-4695-af0e-fb650def6f3c",
+        "name": "price_filter",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": true,
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "eee8674a-806d-4775-b027-6101ac08fa4b",
+        "name": "rh_tradable",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": true,
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "b4e0963b-2da4-490d-a96b-b7f7fc9a60b8",
+        "name": "exchange",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "NASDAQ",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "90a668e7-61d1-4af4-9342-2af8d66927aa",
+        "name": "ma200_relation",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Above",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "79f3c1d0-c847-4eee-b61f-e1d240bd3e9a",
+        "name": "macd_state",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Bullish cross",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "40cf471d-8baf-4117-9bd5-ebafa318aaf2",
+        "name": "news_sentiment",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Neutral",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "d0cb2fd0-be09-4b4f-8216-7953a39eb154",
+        "name": "social_bull_ratio",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "1.0-1.5",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "181d9b40-3af0-4644-b425-c529400dd74b",
+        "name": "social_velocity",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Flat",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "7934520d-5ca6-456c-8057-95fa8eb52df3",
+        "name": "source_quality",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Top-tier outlet",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "dc3a60c4-3f6b-4d2b-b189-09595b7bb17a",
+        "name": "darkpool_signal",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Unknown",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "f9d03416-a7bf-4af0-85f1-885c65885b38",
+        "name": "halt_history",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "None",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "88a94dcc-c0e2-404f-986b-abeb66efcea5",
+        "name": "cash_runway",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Unknown",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "e615b5ca-2cc9-4a32-bc1b-3166bdf84d68",
+        "name": "rev_trend",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Flat",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "35bf4667-dac4-4c56-9670-c5026909d884",
+        "name": "earn_surprise",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "+0-10%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "5aee18fc-2970-4ee7-ab94-bc1bf085e5c2",
+        "name": "dilution_risk",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Unknown",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "fe091e07-1f99-4edf-876f-f94d2825ca12",
+        "name": "peers_strength",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Mixed",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "eb093588-d5bb-4986-b66c-bc1d5aef7baa",
+        "name": "macro_tide",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Mixed",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "90843a1a-df8c-47e8-b580-414eef4c6a7b",
+        "name": "sector_flow",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Flat",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "4b27c81a-2670-4329-9571-20c676b5c18d",
+        "name": "vix_regime",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "15-20",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "afe72e2e-75ad-421e-bd22-6a755c53726a",
+        "name": "ivrank",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "40-60",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "7e6371b1-4fbc-4e59-96b5-6cbb75a78be0",
+        "name": "gex_state",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "Neutral",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "f92dcc39-69b1-4848-9346-2fe633dc177d",
+        "name": "uoa_flag",
+        "type": "static",
+        "description": "from base_defaults",
+        "defaultValue": "No",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "defaults"
+        ]
+      },
+      {
+        "id": "449faecf-1278-4e31-8283-a97359c263da",
+        "name": "strategy",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "54c1e2c0-0d25-430d-b451-855b1d929a32",
+        "name": "primary_catalyst",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "1204f22d-2a81-4b83-a2e5-555a4e93de03",
+        "name": "catalyst_detail",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "7ae78fef-7cbf-49bc-beda-bc82a7ad6d12",
+        "name": "catalyst_recency",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "16da3ec2-b1c6-47c5-bf9d-92e79ccc4f8a",
+        "name": "trend_state",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "63c0dd98-9742-4396-9ac8-69c91b475d44",
+        "name": "rsi_14",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "a45dd073-36af-4045-81d2-c32d23d8c0bc",
+        "name": "ma_stack",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "244afd59-d2c3-4248-b0fb-25fa1c74d9c2",
+        "name": "bb_position",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "e0c7b923-ef93-4c0b-9cb0-8e093f8fb0fe",
+        "name": "sr_distance",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "f635e20d-8e5c-418c-b310-e534f9850204",
+        "name": "gap_status",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "f9a1a258-30e6-4f2e-9520-d964ed021d99",
+        "name": "vwap_relation",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "d0ff470b-de8f-41f2-b5c4-190c3a01347d",
+        "name": "avg_vol_7d",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "ee9feca9-1538-4bd0-9afa-f56eb745bfab",
+        "name": "dollar_vol",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "4f4489ea-06eb-4625-8bc7-323e978c2f2e",
+        "name": "bid_ask_spread",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "9d5935dd-b537-4684-866a-5f0d9718d4aa",
+        "name": "float_size",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "02cf7cb2-e587-450e-8246-3b81275971bd",
+        "name": "short_interest_dtc",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "c634a687-e01d-4c58-b937-be6a39043979",
+        "name": "atr_pct",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "d5b454f4-39c4-4c3a-b3bc-4987f678c628",
+        "name": "hv_30",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "dc2c69c8-0bcc-432d-b5c6-8f6f18f67d90",
+        "name": "max_portfolio_pct",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "e382b897-dc0b-49c9-ba3d-bd0811303662",
+        "name": "stop_style",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "503355c7-952f-493a-97e3-cc62cd31905f",
+        "name": "rr_min",
+        "type": "static",
+        "description": "placeholder default",
+        "defaultValue": "[missing]",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "placeholders"
+        ]
+      },
+      {
+        "id": "a06345b4-13ff-40b7-857e-c6f9a47c9f89",
+        "name": "CatalystPack.Earnings.primary_catalyst",
+        "type": "static",
+        "description": "CatalystPack \u2192 Earnings",
+        "defaultValue": "Earnings",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "2df7d06e-cc03-4cad-9453-324ebb923601",
+        "name": "CatalystPack.Earnings.catalyst_detail",
+        "type": "static",
+        "description": "CatalystPack \u2192 Earnings",
+        "defaultValue": "Earnings beat",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "75d79e9e-60d7-4b7c-b20b-ec5e21df7b01",
+        "name": "CatalystPack.Earnings.catalyst_recency",
+        "type": "static",
+        "description": "CatalystPack \u2192 Earnings",
+        "defaultValue": "Today",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "3dfdbea9-2b27-46df-9882-38f5c1841265",
+        "name": "CatalystPack.Earnings.source_quality",
+        "type": "static",
+        "description": "CatalystPack \u2192 Earnings",
+        "defaultValue": "Top-tier outlet",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "05453181-3e89-4d68-a23e-5cb28bf071e4",
+        "name": "CatalystPack.PR/Media.primary_catalyst",
+        "type": "static",
+        "description": "CatalystPack \u2192 PR/Media",
+        "defaultValue": "PR/Media",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "589c8e88-f1d7-40c3-9f1d-5a5cda2807ca",
+        "name": "CatalystPack.PR/Media.catalyst_detail",
+        "type": "static",
+        "description": "CatalystPack \u2192 PR/Media",
+        "defaultValue": "Product launch",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "fd4fff07-99a6-429a-85d6-1760decfa0b5",
+        "name": "CatalystPack.PR/Media.catalyst_recency",
+        "type": "static",
+        "description": "CatalystPack \u2192 PR/Media",
+        "defaultValue": "< 3 days",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "8307b546-6868-409a-9936-e55bc431573d",
+        "name": "CatalystPack.PR/Media.source_quality",
+        "type": "static",
+        "description": "CatalystPack \u2192 PR/Media",
+        "defaultValue": "Company PR",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "120d826b-5914-497d-928d-0a57b1be70a9",
+        "name": "CatalystPack.FDA/Clinical.primary_catalyst",
+        "type": "static",
+        "description": "CatalystPack \u2192 FDA/Clinical",
+        "defaultValue": "FDA/Clinical",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "86dd294f-9639-45ff-9e76-dcd3c82996c5",
+        "name": "CatalystPack.FDA/Clinical.catalyst_detail",
+        "type": "static",
+        "description": "CatalystPack \u2192 FDA/Clinical",
+        "defaultValue": "Phase 2/3 readout",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "ac6cbe55-e099-41b4-909e-570d905b7ac1",
+        "name": "CatalystPack.FDA/Clinical.catalyst_recency",
+        "type": "static",
+        "description": "CatalystPack \u2192 FDA/Clinical",
+        "defaultValue": "Upcoming",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "bb887b44-5e28-46cc-bf60-79eb72badd6a",
+        "name": "CatalystPack.FDA/Clinical.source_quality",
+        "type": "static",
+        "description": "CatalystPack \u2192 FDA/Clinical",
+        "defaultValue": "Top-tier outlet",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "3914daee-3d1d-4189-b289-a902b2654d0b",
+        "name": "CatalystPack.Guidance/Analyst.primary_catalyst",
+        "type": "static",
+        "description": "CatalystPack \u2192 Guidance/Analyst",
+        "defaultValue": "Guidance/M&A/Analyst",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "def4238c-13c6-4925-a949-637abd80c85d",
+        "name": "CatalystPack.Guidance/Analyst.catalyst_detail",
+        "type": "static",
+        "description": "CatalystPack \u2192 Guidance/Analyst",
+        "defaultValue": "Guidance raise",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "74b97491-2c51-4240-875a-6bfb06585a94",
+        "name": "CatalystPack.Guidance/Analyst.catalyst_recency",
+        "type": "static",
+        "description": "CatalystPack \u2192 Guidance/Analyst",
+        "defaultValue": "Today",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "c1f25254-8536-482a-b699-4cde2216f51c",
+        "name": "CatalystPack.Guidance/Analyst.source_quality",
+        "type": "static",
+        "description": "CatalystPack \u2192 Guidance/Analyst",
+        "defaultValue": "Top-tier outlet",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "54602d97-417b-481c-9f38-bd267596a3f3",
+        "name": "CatalystPack.Any Recent (2-3d).catalyst_recency",
+        "type": "static",
+        "description": "CatalystPack \u2192 Any Recent (2-3d)",
+        "defaultValue": "< 3 days",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "35802d29-8789-41ea-a4a0-1bfb69083207",
+        "name": "CatalystPack.Any Recent (7d).catalyst_recency",
+        "type": "static",
+        "description": "CatalystPack \u2192 Any Recent (7d)",
+        "defaultValue": "< 7 days",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "e0aac32a-6357-4fd9-92b0-da61e5149fe2",
+        "name": "CatalystPack.None/De-risk.primary_catalyst",
+        "type": "static",
+        "description": "CatalystPack \u2192 None/De-risk",
+        "defaultValue": "None",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "CatalystPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "33f4e331-cf89-414c-a1f3-88b10c49350b",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "Opening range breakout",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "ee84fc8b-7693-4879-a3a5-03f8ad3e663b",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.vwap_relation",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "Above",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "960571ee-747c-4980-bc02-2265b7d471d4",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.bb_position",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "Squeeze",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "25ef8f57-c7aa-4d3f-9107-3bab7be0d942",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.trend_state",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "Up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "a530b37e-8e9f-4348-bfff-eaf64d05d9bd",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.rsi_14",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "60-70",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "54fdc9d4-b1d4-4d0f-a203-87cd19d14f63",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.ma_stack",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "Price>EMA20>EMA50",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0a49cc49-4baa-4dd7-9450-754a6652ecdf",
+        "name": "TechnicalPack.ORBs+VWAP+Squeeze.gap_status",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ORBs+VWAP+Squeeze",
+        "defaultValue": "Gap up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "e9afd558-a5fb-4d70-aef4-f1587b43c0a3",
+        "name": "TechnicalPack.TrendCont+PullbackBuy.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 TrendCont+PullbackBuy",
+        "defaultValue": "VWAP reclaim",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "ddfdcb6d-c68b-4d40-a6dc-f46513ec906f",
+        "name": "TechnicalPack.TrendCont+PullbackBuy.trend_state",
+        "type": "static",
+        "description": "TechnicalPack \u2192 TrendCont+PullbackBuy",
+        "defaultValue": "Up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "48e2f87b-7a0b-45ab-9499-17ca27da337a",
+        "name": "TechnicalPack.TrendCont+PullbackBuy.rsi_14",
+        "type": "static",
+        "description": "TechnicalPack \u2192 TrendCont+PullbackBuy",
+        "defaultValue": "50-60",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "886ba03b-01b7-44da-a650-8509810a2a24",
+        "name": "TechnicalPack.TrendCont+PullbackBuy.ma_stack",
+        "type": "static",
+        "description": "TechnicalPack \u2192 TrendCont+PullbackBuy",
+        "defaultValue": "Price>EMA20>EMA50",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "703a34d3-8edd-498c-bd74-59586f15757a",
+        "name": "TechnicalPack.TrendCont+PullbackBuy.sr_distance",
+        "type": "static",
+        "description": "TechnicalPack \u2192 TrendCont+PullbackBuy",
+        "defaultValue": "Near support",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "488360d2-493b-4595-a2f2-fea0d660493c",
+        "name": "TechnicalPack.NewsHalt+VWAP Reclaim.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 NewsHalt+VWAP Reclaim",
+        "defaultValue": "News halt resume",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "cfb663e4-3b87-4f69-93a4-fa9e12a1766f",
+        "name": "TechnicalPack.NewsHalt+VWAP Reclaim.vwap_relation",
+        "type": "static",
+        "description": "TechnicalPack \u2192 NewsHalt+VWAP Reclaim",
+        "defaultValue": "Touching",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "1e8f45e2-1b1b-4072-9531-dfb5bf4215db",
+        "name": "TechnicalPack.NewsHalt+VWAP Reclaim.trend_state",
+        "type": "static",
+        "description": "TechnicalPack \u2192 NewsHalt+VWAP Reclaim",
+        "defaultValue": "Up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "c922d15d-10c8-4b48-b072-581719398ac8",
+        "name": "TechnicalPack.NewsHalt+VWAP Reclaim.bb_position",
+        "type": "static",
+        "description": "TechnicalPack \u2192 NewsHalt+VWAP Reclaim",
+        "defaultValue": "Upper band ride",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0556e621-8e9d-4ad2-a48e-234d42f29c07",
+        "name": "TechnicalPack.GapHold+OR Breakout.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 GapHold+OR Breakout",
+        "defaultValue": "Opening range breakout",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0908ef0f-3ffe-418b-93c1-acc26e1adb11",
+        "name": "TechnicalPack.GapHold+OR Breakout.gap_status",
+        "type": "static",
+        "description": "TechnicalPack \u2192 GapHold+OR Breakout",
+        "defaultValue": "Gap up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "c25724e6-8698-433a-b9dc-35b57f73537e",
+        "name": "TechnicalPack.GapHold+OR Breakout.trend_state",
+        "type": "static",
+        "description": "TechnicalPack \u2192 GapHold+OR Breakout",
+        "defaultValue": "Up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "ed2065a9-3c51-43f2-b191-e7f8c08014f6",
+        "name": "TechnicalPack.GapHold+OR Breakout.sr_distance",
+        "type": "static",
+        "description": "TechnicalPack \u2192 GapHold+OR Breakout",
+        "defaultValue": "Mid-range",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "db320e27-b38c-49a4-a395-8df422d76084",
+        "name": "TechnicalPack.EventVolatility.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 EventVolatility",
+        "defaultValue": "MA crossover",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "e4a83f0b-55b2-4b93-b421-783f5d41d37c",
+        "name": "TechnicalPack.EventVolatility.bb_position",
+        "type": "static",
+        "description": "TechnicalPack \u2192 EventVolatility",
+        "defaultValue": "Squeeze",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "892119fa-0be9-42d7-aeb6-af07168dcd14",
+        "name": "TechnicalPack.EventVolatility.halt_history",
+        "type": "static",
+        "description": "TechnicalPack \u2192 EventVolatility",
+        "defaultValue": "Multiple",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "fc4b5e38-9914-4e85-9d55-a0641f7c74a4",
+        "name": "TechnicalPack.MAStack+S/R Break.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 MAStack+S/R Break",
+        "defaultValue": "Break of premarket high",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "fdacca5e-25a7-4c20-a88e-4786e8550917",
+        "name": "TechnicalPack.MAStack+S/R Break.trend_state",
+        "type": "static",
+        "description": "TechnicalPack \u2192 MAStack+S/R Break",
+        "defaultValue": "Up",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "7921ae05-e875-4aee-97c3-95289485b42e",
+        "name": "TechnicalPack.MAStack+S/R Break.ma_stack",
+        "type": "static",
+        "description": "TechnicalPack \u2192 MAStack+S/R Break",
+        "defaultValue": "Price>EMA20>EMA50",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "715df067-7b44-4a1a-96b9-a651099041f0",
+        "name": "TechnicalPack.MAStack+S/R Break.sr_distance",
+        "type": "static",
+        "description": "TechnicalPack \u2192 MAStack+S/R Break",
+        "defaultValue": "Near resistance",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0e2fe202-7984-41d2-9a7c-34a282c35d73",
+        "name": "TechnicalPack.ReversalSetup.enter_trigger",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ReversalSetup",
+        "defaultValue": "Support bounce",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "227316f9-60c3-4ddd-bed1-0c400a29fd83",
+        "name": "TechnicalPack.ReversalSetup.trend_state",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ReversalSetup",
+        "defaultValue": "Down",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "6e9bcf25-79a0-4e67-a759-6c544d60e846",
+        "name": "TechnicalPack.ReversalSetup.vwap_relation",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ReversalSetup",
+        "defaultValue": "Below",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0a63236e-5970-4925-885b-2018f8e58e61",
+        "name": "TechnicalPack.ReversalSetup.sr_distance",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ReversalSetup",
+        "defaultValue": "At support",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "2a725034-61b7-4a2a-bea6-90ec03e2ae67",
+        "name": "TechnicalPack.ReversalSetup.rsi_14",
+        "type": "static",
+        "description": "TechnicalPack \u2192 ReversalSetup",
+        "defaultValue": "30-40",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "TechnicalPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "d32a1763-514e-4913-abaa-f892ecbcc9e6",
+        "name": "LiquidityPack.Nano Float.float_size",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Nano Float",
+        "defaultValue": "Nano (<10M)",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "5ab3c43f-10ad-47b0-9cbd-236b5da20e48",
+        "name": "LiquidityPack.Nano Float.avg_vol_7d",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Nano Float",
+        "defaultValue": ">=5M",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "d0536da8-0580-42d0-97fa-4d325e56de13",
+        "name": "LiquidityPack.Nano Float.bid_ask_spread",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Nano Float",
+        "defaultValue": "Wide",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "74eadae8-47b4-4333-b967-09c0221eade9",
+        "name": "LiquidityPack.Nano Float.short_interest_dtc",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Nano Float",
+        "defaultValue": "1-3",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "dad79b9c-b94f-4f6e-9fd6-510ef98d0a00",
+        "name": "LiquidityPack.Small Float.float_size",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Small Float",
+        "defaultValue": "Small (10-50M)",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "4e89437b-66e5-4adc-860f-96055808b6e3",
+        "name": "LiquidityPack.Small Float.avg_vol_7d",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Small Float",
+        "defaultValue": "2-5M",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "935a0f17-fbde-4c19-bcd2-fe688b3c6b58",
+        "name": "LiquidityPack.Small Float.bid_ask_spread",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Small Float",
+        "defaultValue": "Normal",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "7ef0a31d-f247-4c5e-b560-c6d7408512bb",
+        "name": "LiquidityPack.Small Float.short_interest_dtc",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Small Float",
+        "defaultValue": "1-3",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "b30f014d-c927-48a4-8613-d06b458aca45",
+        "name": "LiquidityPack.Illiquid Caution.avg_vol_7d",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Illiquid Caution",
+        "defaultValue": "<1M",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "16b5ce34-c41c-4b02-a23b-c2f9306ae34b",
+        "name": "LiquidityPack.Illiquid Caution.bid_ask_spread",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Illiquid Caution",
+        "defaultValue": "Wide",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "24725496-7915-4dc7-975e-135fc2faccc7",
+        "name": "LiquidityPack.Illiquid Caution.dollar_vol",
+        "type": "static",
+        "description": "LiquidityPack \u2192 Illiquid Caution",
+        "defaultValue": "<$5M",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "LiquidityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "9f9b5766-8c6e-4f6f-835b-bcfa07916afa",
+        "name": "VolatilityPack.Very High ATR.atr_pct",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Very High ATR",
+        "defaultValue": ">=15%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0c9e13f3-e7be-498a-92ce-19348d581644",
+        "name": "VolatilityPack.Very High ATR.hv_30",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Very High ATR",
+        "defaultValue": ">=150%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "fa69b909-80ae-4563-a6e2-b4784be022f1",
+        "name": "VolatilityPack.High ATR.atr_pct",
+        "type": "static",
+        "description": "VolatilityPack \u2192 High ATR",
+        "defaultValue": "10-15%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "5df9d54f-86f5-4755-920a-3c9d0148570f",
+        "name": "VolatilityPack.High ATR.hv_30",
+        "type": "static",
+        "description": "VolatilityPack \u2192 High ATR",
+        "defaultValue": "100-150%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "00e71394-4a6e-43b2-a0dc-16a1cdb3293e",
+        "name": "VolatilityPack.Elevated ATR.atr_pct",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Elevated ATR",
+        "defaultValue": "5-10%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0c0bce5f-0201-48d7-9652-483a0645b816",
+        "name": "VolatilityPack.Elevated ATR.hv_30",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Elevated ATR",
+        "defaultValue": "50-100%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "cf4a470e-c795-4112-9d04-fe10c63c8281",
+        "name": "VolatilityPack.Moderate ATR.atr_pct",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Moderate ATR",
+        "defaultValue": "5-10%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "1ccb52e9-f4bc-4546-aea7-5d5cf05fb3f4",
+        "name": "VolatilityPack.Moderate ATR.hv_30",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Moderate ATR",
+        "defaultValue": "50-100%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "1b22da6c-68f4-4092-afb2-2eeb4a3f3f56",
+        "name": "VolatilityPack.Normal ATR.atr_pct",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Normal ATR",
+        "defaultValue": "<5%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "97e9908c-64ca-4c99-88b8-8961f36cd2e4",
+        "name": "VolatilityPack.Normal ATR.hv_30",
+        "type": "static",
+        "description": "VolatilityPack \u2192 Normal ATR",
+        "defaultValue": "<50%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "VolatilityPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "9e6fd213-4824-4bc3-9fb9-aa24d68d4b36",
+        "name": "RiskPack.Scalp Mode.max_portfolio_pct",
+        "type": "static",
+        "description": "RiskPack \u2192 Scalp Mode",
+        "defaultValue": "3%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "d7896dc9-fba1-4c0f-a15b-a43c3716a121",
+        "name": "RiskPack.Scalp Mode.stop_style",
+        "type": "static",
+        "description": "RiskPack \u2192 Scalp Mode",
+        "defaultValue": "ATR-based",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "8281d98a-7d70-4cf8-8dcd-2cfe2204e34f",
+        "name": "RiskPack.Scalp Mode.rr_min",
+        "type": "static",
+        "description": "RiskPack \u2192 Scalp Mode",
+        "defaultValue": "1:2.5",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "0ab658e6-421a-44d6-8d03-04a63415cb77",
+        "name": "RiskPack.Scalp Mode.exit_plan",
+        "type": "static",
+        "description": "RiskPack \u2192 Scalp Mode",
+        "defaultValue": "Scale 33/33/34",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "87730be2-ca10-4fa6-a7ff-7934e0e5d21c",
+        "name": "RiskPack.Tighter Stops.max_portfolio_pct",
+        "type": "static",
+        "description": "RiskPack \u2192 Tighter Stops",
+        "defaultValue": "3%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "a96cff01-f3ba-4689-8d2b-7ba625055ead",
+        "name": "RiskPack.Tighter Stops.stop_style",
+        "type": "static",
+        "description": "RiskPack \u2192 Tighter Stops",
+        "defaultValue": "Structure (below S/R)",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "d3e45614-30ba-4918-bace-2b34e54e376d",
+        "name": "RiskPack.Tighter Stops.rr_min",
+        "type": "static",
+        "description": "RiskPack \u2192 Tighter Stops",
+        "defaultValue": "1:3",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "44d6e85b-7c79-4ea7-a1bc-0c599a851641",
+        "name": "RiskPack.Tighter Stops.exit_plan",
+        "type": "static",
+        "description": "RiskPack \u2192 Tighter Stops",
+        "defaultValue": "Single TP + hard SL",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "9599eaa3-ab76-4582-a5c7-e9c1646e311e",
+        "name": "RiskPack.Default.max_portfolio_pct",
+        "type": "static",
+        "description": "RiskPack \u2192 Default",
+        "defaultValue": "5%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "e235681c-8ba5-42d0-876b-370037b6969f",
+        "name": "RiskPack.Default.stop_style",
+        "type": "static",
+        "description": "RiskPack \u2192 Default",
+        "defaultValue": "Structure (below S/R)",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "b633c583-3ab1-4ad2-a6f8-d416bfc6c31e",
+        "name": "RiskPack.Default.rr_min",
+        "type": "static",
+        "description": "RiskPack \u2192 Default",
+        "defaultValue": "1:3",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "64038250-793b-48c3-bfb5-8911559b637e",
+        "name": "RiskPack.Default.exit_plan",
+        "type": "static",
+        "description": "RiskPack \u2192 Default",
+        "defaultValue": "Trail with VWAP",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "6ae8436d-7d41-4e8d-993c-7f245512889f",
+        "name": "RiskPack.Wider Stops.max_portfolio_pct",
+        "type": "static",
+        "description": "RiskPack \u2192 Wider Stops",
+        "defaultValue": "2%",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "5cdc23f2-2658-4da3-87e1-cfeb2a189e24",
+        "name": "RiskPack.Wider Stops.stop_style",
+        "type": "static",
+        "description": "RiskPack \u2192 Wider Stops",
+        "defaultValue": "ATR-based",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "83e68c03-6f9e-4ffe-aebc-f1dbfe4f4cf2",
+        "name": "RiskPack.Wider Stops.rr_min",
+        "type": "static",
+        "description": "RiskPack \u2192 Wider Stops",
+        "defaultValue": "1:2",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "1976907e-47cd-4164-9418-90cea4c3ad53",
+        "name": "RiskPack.Wider Stops.exit_plan",
+        "type": "static",
+        "description": "RiskPack \u2192 Wider Stops",
+        "defaultValue": "Trail with ATR",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "RiskPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "fcb43667-28b1-43f2-b392-a4c49a309d92",
+        "name": "OptionsPack.Auto.uoa_flag",
+        "type": "static",
+        "description": "OptionsPack \u2192 Auto",
+        "defaultValue": "No",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "77e2b699-2ca2-4a3c-95b8-470f05fe51ae",
+        "name": "OptionsPack.Auto.gex_state",
+        "type": "static",
+        "description": "OptionsPack \u2192 Auto",
+        "defaultValue": "Neutral",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "a5c059bb-cda7-47f1-86d9-7eeca864036b",
+        "name": "OptionsPack.Auto.ivrank",
+        "type": "static",
+        "description": "OptionsPack \u2192 Auto",
+        "defaultValue": "40-60",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "2e5eb590-1c44-442c-ab37-88049537a6f4",
+        "name": "OptionsPack.Positive GEX.gex_state",
+        "type": "static",
+        "description": "OptionsPack \u2192 Positive GEX",
+        "defaultValue": "Positive",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "485b86df-74e6-4d47-97d7-2f5ed64cdbb1",
+        "name": "OptionsPack.Negative GEX.gex_state",
+        "type": "static",
+        "description": "OptionsPack \u2192 Negative GEX",
+        "defaultValue": "Negative",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "ce5c47e2-7c15-4ca9-a1e8-0b8f9ef4fb93",
+        "name": "OptionsPack.Ignore Options.uoa_flag",
+        "type": "static",
+        "description": "OptionsPack \u2192 Ignore Options",
+        "defaultValue": "No",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "1baaca67-6293-4124-88b1-3a2a549929cb",
+        "name": "OptionsPack.Ignore Options.gex_state",
+        "type": "static",
+        "description": "OptionsPack \u2192 Ignore Options",
+        "defaultValue": "Neutral",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "65525ab1-5611-4091-8618-f46a610b5dae",
+        "name": "OptionsPack.Ignore Options.ivrank",
+        "type": "static",
+        "description": "OptionsPack \u2192 Ignore Options",
+        "defaultValue": "<40",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "OptionsPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "468dfb0b-f36b-4242-8f52-901be60f8739",
+        "name": "MacroPack.Auto.macro_tide",
+        "type": "static",
+        "description": "MacroPack \u2192 Auto",
+        "defaultValue": "Mixed",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "e3641e32-b02d-4294-bd92-d075bedaed57",
+        "name": "MacroPack.Auto.sector_flow",
+        "type": "static",
+        "description": "MacroPack \u2192 Auto",
+        "defaultValue": "Flat",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "09ae54d5-4c6d-4fc7-b465-c682a2748094",
+        "name": "MacroPack.Auto.vix_regime",
+        "type": "static",
+        "description": "MacroPack \u2192 Auto",
+        "defaultValue": "15-20",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "f6e5b6fa-6fd3-40ab-b029-38598dab4247",
+        "name": "MacroPack.Risk-on.macro_tide",
+        "type": "static",
+        "description": "MacroPack \u2192 Risk-on",
+        "defaultValue": "Risk-on",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "d4776a57-9256-4dca-b462-8e2e97292013",
+        "name": "MacroPack.Risk-on.sector_flow",
+        "type": "static",
+        "description": "MacroPack \u2192 Risk-on",
+        "defaultValue": "Inflow",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "c861adaa-b04e-470d-bc88-faa2c2d4ba5b",
+        "name": "MacroPack.Risk-on.vix_regime",
+        "type": "static",
+        "description": "MacroPack \u2192 Risk-on",
+        "defaultValue": "<15",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "c85b8b95-89b3-4867-8397-d576488d9882",
+        "name": "MacroPack.Risk-off.macro_tide",
+        "type": "static",
+        "description": "MacroPack \u2192 Risk-off",
+        "defaultValue": "Risk-off",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "add1c020-6cf1-4166-9d1f-956f0e5c2e79",
+        "name": "MacroPack.Risk-off.sector_flow",
+        "type": "static",
+        "description": "MacroPack \u2192 Risk-off",
+        "defaultValue": "Outflow",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "48791972-4ad0-45fa-a63d-6ef722a8e7da",
+        "name": "MacroPack.Risk-off.vix_regime",
+        "type": "static",
+        "description": "MacroPack \u2192 Risk-off",
+        "defaultValue": "20-25",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "9d7656c4-7397-41ba-bd6c-ee5ba7a38ac3",
+        "name": "MacroPack.Mixed.macro_tide",
+        "type": "static",
+        "description": "MacroPack \u2192 Mixed",
+        "defaultValue": "Mixed",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "36fc594c-8d4e-482e-a9fd-c56d091614ef",
+        "name": "MacroPack.Mixed.sector_flow",
+        "type": "static",
+        "description": "MacroPack \u2192 Mixed",
+        "defaultValue": "Flat",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "ed350b1c-f66b-405f-a8e4-f6aef3f2d60a",
+        "name": "MacroPack.Mixed.vix_regime",
+        "type": "static",
+        "description": "MacroPack \u2192 Mixed",
+        "defaultValue": "15-20",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "MacroPack",
+          "pack"
+        ]
+      },
+      {
+        "id": "3f052766-0eec-4aa7-bcaf-4367489bdcbd",
+        "name": "advanced_ai_form.metadata",
+        "type": "static",
+        "description": "Original advanced_ai_form metadata",
+        "defaultValue": "{\n  \"version_source\": \"2.1\",\n  \"merge_order\": [\n    \"base_defaults\",\n    \"preset_packs\",\n    \"override_packs\",\n    \"aggression\",\n    \"user_fields\"\n  ],\n  \"strategy_rules\": [\n    {\n      \"if_preset_starts_with\": \"Momentum\",\n      \"strategy\": \"Momentum\"\n    },\n    {\n      \"if_preset_starts_with\": \"Breakout\",\n      \"strategy\": \"Breakout\"\n    },\n    {\n      \"if_preset_starts_with\": \"Reversal\",\n      \"strategy\": \"Reversal\"\n    },\n    {\n      \"if_preset_contains\": \"Earnings\",\n      \"strategy\": \"News-Driven\"\n    },\n    {\n      \"default\": \"News-Driven\"\n    }\n  ],\n  \"presets\": {\n    \"Momentum: Gap & Go (Nano Float)\": {\n      \"CatalystPack\": \"PR/Media\",\n      \"TechnicalPack\": \"ORBs+VWAP+Squeeze\",\n      \"LiquidityPack\": \"Nano Float\",\n      \"VolatilityPack\": \"High ATR\",\n      \"RiskPack\": \"Scalp Mode\",\n      \"OptionsPack\": \"Ignore Options\",\n      \"MacroPack\": \"Auto\"\n    },\n    \"Momentum: Continuation (Day 2/3)\": {\n      \"CatalystPack\": \"Any Recent (2-3d)\",\n      \"TechnicalPack\": \"TrendCont+PullbackBuy\",\n      \"LiquidityPack\": \"Small Float\",\n      \"VolatilityPack\": \"Elevated ATR\",\n      \"RiskPack\": \"Default\",\n      \"OptionsPack\": \"Auto\",\n      \"MacroPack\": \"Auto\"\n    },\n    \"News: PR Pop (Small Cap)\": {\n      \"CatalystPack\": \"PR/Media\",\n      \"TechnicalPack\": \"NewsHalt+VWAP Reclaim\",\n      \"LiquidityPack\": \"Small Float\",\n      \"VolatilityPack\": \"High ATR\",\n      \"RiskPack\": \"Tighter Stops\",\n      \"OptionsPack\": \"Ignore Options\",\n      \"MacroPack\": \"Auto\"\n    },\n    \"Earnings: Beat/Guide Up\": {\n      \"CatalystPack\": \"Earnings\",\n      \"TechnicalPack\": \"GapHold+OR Breakout\",\n      \"LiquidityPack\": \"Small Float\",\n      \"VolatilityPack\": \"Moderate ATR\",\n      \"RiskPack\": \"Default\",\n      \"OptionsPack\": \"Positive GEX\",\n      \"MacroPack\": \"Auto\"\n    },\n    \"Biotech: PDUFA/Topline (Spec)\": {\n      \"CatalystPack\": \"FDA/Clinical\",\n      \"TechnicalPack\": \"EventVolatility\",\n      \"LiquidityPack\": \"Nano Float\",\n      \"VolatilityPack\": \"Very High ATR\",\n      \"RiskPack\": \"Wider Stops\",\n      \"OptionsPack\": \"Ignore Options\",\n      \"MacroPack\": \"Risk-off\"\n    },\n    \"Breakout Swing <$3\": {\n      \"CatalystPack\": \"Any Recent (7d)\",\n      \"TechnicalPack\": \"MAStack+S/R Break\",\n      \"LiquidityPack\": \"Small Float\",\n      \"VolatilityPack\": \"Moderate ATR\",\n      \"RiskPack\": \"Default\",\n      \"OptionsPack\": \"Auto\",\n      \"MacroPack\": \"Mixed\"\n    },\n    \"Reversal at Support (VWAP/200MA)\": {\n      \"CatalystPack\": \"None/De-risk\",\n      \"TechnicalPack\": \"ReversalSetup\",\n      \"LiquidityPack\": \"Illiquid Caution\",\n      \"VolatilityPack\": \"Normal ATR\",\n      \"RiskPack\": \"Tighter Stops\",\n      \"OptionsPack\": \"Auto\",\n      \"MacroPack\": \"Risk-off\"\n    }\n  }\n}",
+        "enum": null,
+        "validation": null,
+        "computed": null,
+        "tags": [
+          "metadata"
+        ]
+      }
+    ],
+    "formElements": [
+      {
+        "id": "92bb3a83-08e5-4b5b-ac40-e4686fcb2177",
+        "name": "ticker",
+        "kind": "text",
+        "label": "Ticker",
+        "placeholder": null,
+        "required": true,
+        "defaultValue": null,
+        "options": null,
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "af09cc9d-0484-494c-894c-029870ab37ed",
+        "name": "preset",
+        "kind": "select",
+        "label": "Playbook Preset",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": null,
+        "options": [
+          {
+            "value": "Momentum: Gap & Go (Nano Float)",
+            "label": "Momentum: Gap & Go (Nano Float)"
+          },
+          {
+            "value": "Momentum: Continuation (Day 2/3)",
+            "label": "Momentum: Continuation (Day 2/3)"
+          },
+          {
+            "value": "News: PR Pop (Small Cap)",
+            "label": "News: PR Pop (Small Cap)"
+          },
+          {
+            "value": "Earnings: Beat/Guide Up",
+            "label": "Earnings: Beat/Guide Up"
+          },
+          {
+            "value": "Biotech: PDUFA/Topline (Spec)",
+            "label": "Biotech: PDUFA/Topline (Spec)"
+          },
+          {
+            "value": "Breakout Swing <$3",
+            "label": "Breakout Swing <$3"
+          },
+          {
+            "value": "Reversal at Support (VWAP/200MA)",
+            "label": "Reversal at Support (VWAP/200MA)"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "0ede4d2e-0db7-433e-b6ac-a3e8999ecac7",
+        "name": "time_horizon",
+        "kind": "select",
+        "label": "Time Horizon",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": "1-3 days",
+        "options": [
+          {
+            "value": "1-3 days",
+            "label": "1-3 days"
+          },
+          {
+            "value": "1-4 weeks",
+            "label": "1-4 weeks"
+          },
+          {
+            "value": "Intraday",
+            "label": "Intraday"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "25ea0fba-8dbd-4739-903c-5673bcf175ad",
+        "name": "confidence",
+        "kind": "select",
+        "label": "Confidence %",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": "90",
+        "options": [
+          {
+            "value": "70",
+            "label": "70"
+          },
+          {
+            "value": "80",
+            "label": "80"
+          },
+          {
+            "value": "85",
+            "label": "85"
+          },
+          {
+            "value": "90",
+            "label": "90"
+          },
+          {
+            "value": "92",
+            "label": "92"
+          },
+          {
+            "value": "95",
+            "label": "95"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "274fd09c-7870-4f4c-a04a-035b0b8515c1",
+        "name": "market_status",
+        "kind": "select",
+        "label": "Market Status",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": null,
+        "options": [
+          {
+            "value": "PRE-MARKET",
+            "label": "PRE-MARKET"
+          },
+          {
+            "value": "OPEN",
+            "label": "OPEN"
+          },
+          {
+            "value": "AFTER-HOURS",
+            "label": "AFTER-HOURS"
+          },
+          {
+            "value": "CLOSED",
+            "label": "CLOSED"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "95ab6e40-af18-4ab1-94b3-c01442b78bea",
+        "name": "event_date",
+        "kind": "date",
+        "label": "Key Event Date (if upcoming)",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": null,
+        "options": null,
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "2596a3bf-74a8-45f1-b8a3-37d40c0aa12c",
+        "name": "aggression",
+        "kind": "select",
+        "label": "Aggression",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": "Standard",
+        "options": [
+          {
+            "value": "Conservative",
+            "label": "Conservative"
+          },
+          {
+            "value": "Standard",
+            "label": "Standard"
+          },
+          {
+            "value": "Aggressive",
+            "label": "Aggressive"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "core"
+        ]
+      },
+      {
+        "id": "b5ad736b-fbe1-4a99-a9e4-5febd5ff573d",
+        "name": "risk_pack",
+        "kind": "select",
+        "label": "Risk Pack Override",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": null,
+        "options": [
+          {
+            "value": "Default",
+            "label": "Default"
+          },
+          {
+            "value": "Tighter Stops",
+            "label": "Tighter Stops"
+          },
+          {
+            "value": "Wider Stops",
+            "label": "Wider Stops"
+          },
+          {
+            "value": "Scalp Mode",
+            "label": "Scalp Mode"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "overrides"
+        ]
+      },
+      {
+        "id": "0d4bc873-3d7a-40f8-a001-c923f348eacf",
+        "name": "liquidity_pack",
+        "kind": "select",
+        "label": "Liquidity Pack Override",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": null,
+        "options": [
+          {
+            "value": "Default",
+            "label": "Default"
+          },
+          {
+            "value": "Nano Float",
+            "label": "Nano Float"
+          },
+          {
+            "value": "Small Float",
+            "label": "Small Float"
+          },
+          {
+            "value": "Illiquid Caution",
+            "label": "Illiquid Caution"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "overrides"
+        ]
+      },
+      {
+        "id": "e6a05299-f858-4b2c-a25e-c69e5f108595",
+        "name": "catalyst_pack",
+        "kind": "select",
+        "label": "Catalyst Pack Override",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": null,
+        "options": [
+          {
+            "value": "Default",
+            "label": "Default"
+          },
+          {
+            "value": "Earnings",
+            "label": "Earnings"
+          },
+          {
+            "value": "PR/Media",
+            "label": "PR/Media"
+          },
+          {
+            "value": "FDA/Clinical",
+            "label": "FDA/Clinical"
+          },
+          {
+            "value": "Guidance/Analyst",
+            "label": "Guidance/Analyst"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "overrides"
+        ]
+      },
+      {
+        "id": "a3221fbd-fa1f-44ad-adbe-da071e07bf25",
+        "name": "options_pack",
+        "kind": "select",
+        "label": "Options/Dealer Overlay",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": "Auto",
+        "options": [
+          {
+            "value": "Auto",
+            "label": "Auto"
+          },
+          {
+            "value": "Positive GEX",
+            "label": "Positive GEX"
+          },
+          {
+            "value": "Negative GEX",
+            "label": "Negative GEX"
+          },
+          {
+            "value": "Ignore Options",
+            "label": "Ignore Options"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "advanced"
+        ]
+      },
+      {
+        "id": "dae52324-14cf-4f0e-8aae-f356bbe8d978",
+        "name": "macro_pack",
+        "kind": "select",
+        "label": "Macro Overlay",
+        "placeholder": null,
+        "required": false,
+        "defaultValue": "Auto",
+        "options": [
+          {
+            "value": "Auto",
+            "label": "Auto"
+          },
+          {
+            "value": "Risk-on",
+            "label": "Risk-on"
+          },
+          {
+            "value": "Risk-off",
+            "label": "Risk-off"
+          },
+          {
+            "value": "Mixed",
+            "label": "Mixed"
+          }
+        ],
+        "rules": null,
+        "tags": [
+          "imported",
+          "advanced"
+        ]
+      }
+    ],
+    "aiPrompts": [
+      {
+        "id": "de0996ba-7c6a-4e1c-8b25-e984656f0bf7",
+        "name": "thanolist",
+        "description": "Converted from advanced_ai_form.output.prompt_template",
+        "system": "You analyze equities and produce validated QRT outputs per the user's format.",
+        "prompt": "You are Thanolist. Analyze {{ticker}} for a {{strategy}} trade over {{time_horizon}} with {{confidence}}% confidence. Prioritize price < $3 (RH={{rh_tradable}}), exchange {{exchange}}, and market {{market_status}}. Catalyst: {{primary_catalyst}} ({{catalyst_detail}}, recency {{catalyst_recency}} on {{event_date}}). Sentiment: news {{news_sentiment}}, social bull/bear {{social_bull_ratio}}, velocity {{social_velocity}}, source {{source_quality}}. Technicals: trend {{trend_state}}, RSI {{rsi_14}}, MA stack {{ma_stack}}, 200MA {{ma200_relation}}, MACD {{macd_state}}, BB {{bb_position}}, S/R {{sr_distance}}, gap {{gap_status}}, VWAP {{vwap_relation}}. Liquidity: avg vol 7d {{avg_vol_7d}}, $ volume {{dollar_vol}}, spread {{bid_ask_spread}}, float {{float_size}}, DTC {{short_interest_dtc}}, dark pool {{darkpool_signal}}. Volatility: ATR% {{atr_pct}}, HV30 {{hv_30}}, halts {{halt_history}}. Fundamentals: runway {{cash_runway}}, revenue {{rev_trend}}, surprise {{earn_surprise}}, dilution {{dilution_risk}}, peers {{peers_strength}}. Options: UOA {{uoa_flag}}, GEX {{gex_state}}, IV rank {{ivrank}}. Macro: tide {{macro_tide}}, sector flow {{sector_flow}}, VIX {{vix_regime}}. Risk: max position {{max_portfolio_pct}}, stop {{stop_style}}, R:R {{rr_min}}. Provide QRT, data validation, analysis, risks, and team share summary per my output format.",
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "maxTokens": 1200,
+        "inputMapping": null,
+        "outputTemplate": "{{output}}",
+        "tags": [
+          "analysis",
+          "conversion"
+        ],
+        "createdAt": "2025-08-12T21:09:26Z",
+        "updatedAt": "2025-08-12T21:09:26Z"
+      },
+      {
+        "id": "170fcb67-7271-485a-9e59-064b01a56adc",
+        "name": "team_share",
+        "description": "Converted from advanced_ai_form.output.team_share_template",
+        "system": "You format a concise team-ready status message.",
+        "prompt": "\ud83d\udcca STOCK ALERT - {{now_date}} {{now_time}} ET\n\ud83c\udfaf Ticker: {{ticker}} | Price: {{last_price}}\n\ud83d\udcc8 Entry: {{enter_trigger}} | Stop: {{stop_style}} | R:R {{rr_min}}\n\u26a1 Catalyst: {{primary_catalyst}} ({{catalyst_detail}}; {{catalyst_recency}})\n\u23f0 Horizon: {{time_horizon}} | Confidence: {{confidence}}%\n\ud83d\udca7 Liquidity: Float {{float_size}}, Vol7d {{avg_vol_7d}}, Spread {{bid_ask_spread}}\n\ud83c\udf21 Vol: ATR% {{atr_pct}}, HV30 {{hv_30}}\n\ud83e\udded Macro: {{macro_tide}}, VIX {{vix_regime}}\nStatus: Ready on trigger.",
+        "model": "gpt-4o-mini",
+        "temperature": 0.2,
+        "maxTokens": 400,
+        "inputMapping": null,
+        "outputTemplate": "{{output}}",
+        "tags": [
+          "formatting",
+          "conversion"
+        ],
+        "createdAt": "2025-08-12T21:09:26Z",
+        "updatedAt": "2025-08-12T21:09:26Z"
+      }
+    ],
+    "packs": [
+      {
+        "id": "0d019e0e-4dbe-4959-aab2-5a6b4566b05d",
+        "name": "Advanced AI Form (Imported)",
+        "description": "Grouping of converted elements from advanced_ai_form.json",
+        "cueIds": [
+          "1fd00f86-69e0-4afe-ad4a-4fbfc99e6ced"
+        ],
+        "variableIds": [
+          "a62f0edd-6d6f-4695-af0e-fb650def6f3c",
+          "eee8674a-806d-4775-b027-6101ac08fa4b",
+          "b4e0963b-2da4-490d-a96b-b7f7fc9a60b8",
+          "90a668e7-61d1-4af4-9342-2af8d66927aa",
+          "79f3c1d0-c847-4eee-b61f-e1d240bd3e9a",
+          "40cf471d-8baf-4117-9bd5-ebafa318aaf2",
+          "d0cb2fd0-be09-4b4f-8216-7953a39eb154",
+          "181d9b40-3af0-4644-b425-c529400dd74b",
+          "7934520d-5ca6-456c-8057-95fa8eb52df3",
+          "dc3a60c4-3f6b-4d2b-b189-09595b7bb17a",
+          "f9d03416-a7bf-4af0-85f1-885c65885b38",
+          "88a94dcc-c0e2-404f-986b-abeb66efcea5",
+          "e615b5ca-2cc9-4a32-bc1b-3166bdf84d68",
+          "35bf4667-dac4-4c56-9670-c5026909d884",
+          "5aee18fc-2970-4ee7-ab94-bc1bf085e5c2",
+          "fe091e07-1f99-4edf-876f-f94d2825ca12",
+          "eb093588-d5bb-4986-b66c-bc1d5aef7baa",
+          "90843a1a-df8c-47e8-b580-414eef4c6a7b",
+          "4b27c81a-2670-4329-9571-20c676b5c18d",
+          "afe72e2e-75ad-421e-bd22-6a755c53726a",
+          "7e6371b1-4fbc-4e59-96b5-6cbb75a78be0",
+          "f92dcc39-69b1-4848-9346-2fe633dc177d",
+          "449faecf-1278-4e31-8283-a97359c263da",
+          "54c1e2c0-0d25-430d-b451-855b1d929a32",
+          "1204f22d-2a81-4b83-a2e5-555a4e93de03",
+          "7ae78fef-7cbf-49bc-beda-bc82a7ad6d12",
+          "16da3ec2-b1c6-47c5-bf9d-92e79ccc4f8a",
+          "63c0dd98-9742-4396-9ac8-69c91b475d44",
+          "a45dd073-36af-4045-81d2-c32d23d8c0bc",
+          "244afd59-d2c3-4248-b0fb-25fa1c74d9c2",
+          "e0c7b923-ef93-4c0b-9cb0-8e093f8fb0fe",
+          "f635e20d-8e5c-418c-b310-e534f9850204",
+          "f9a1a258-30e6-4f2e-9520-d964ed021d99",
+          "d0ff470b-de8f-41f2-b5c4-190c3a01347d",
+          "ee9feca9-1538-4bd0-9afa-f56eb745bfab",
+          "4f4489ea-06eb-4625-8bc7-323e978c2f2e",
+          "9d5935dd-b537-4684-866a-5f0d9718d4aa",
+          "02cf7cb2-e587-450e-8246-3b81275971bd",
+          "c634a687-e01d-4c58-b937-be6a39043979",
+          "d5b454f4-39c4-4c3a-b3bc-4987f678c628",
+          "dc2c69c8-0bcc-432d-b5c6-8f6f18f67d90",
+          "e382b897-dc0b-49c9-ba3d-bd0811303662",
+          "503355c7-952f-493a-97e3-cc62cd31905f",
+          "a06345b4-13ff-40b7-857e-c6f9a47c9f89",
+          "2df7d06e-cc03-4cad-9453-324ebb923601",
+          "75d79e9e-60d7-4b7c-b20b-ec5e21df7b01",
+          "3dfdbea9-2b27-46df-9882-38f5c1841265",
+          "05453181-3e89-4d68-a23e-5cb28bf071e4",
+          "589c8e88-f1d7-40c3-9f1d-5a5cda2807ca",
+          "fd4fff07-99a6-429a-85d6-1760decfa0b5",
+          "8307b546-6868-409a-9936-e55bc431573d",
+          "120d826b-5914-497d-928d-0a57b1be70a9",
+          "86dd294f-9639-45ff-9e76-dcd3c82996c5",
+          "ac6cbe55-e099-41b4-909e-570d905b7ac1",
+          "bb887b44-5e28-46cc-bf60-79eb72badd6a",
+          "3914daee-3d1d-4189-b289-a902b2654d0b",
+          "def4238c-13c6-4925-a949-637abd80c85d",
+          "74b97491-2c51-4240-875a-6bfb06585a94",
+          "c1f25254-8536-482a-b699-4cde2216f51c",
+          "54602d97-417b-481c-9f38-bd267596a3f3",
+          "35802d29-8789-41ea-a4a0-1bfb69083207",
+          "e0aac32a-6357-4fd9-92b0-da61e5149fe2",
+          "33f4e331-cf89-414c-a1f3-88b10c49350b",
+          "ee84fc8b-7693-4879-a3a5-03f8ad3e663b",
+          "960571ee-747c-4980-bc02-2265b7d471d4",
+          "25ef8f57-c7aa-4d3f-9107-3bab7be0d942",
+          "a530b37e-8e9f-4348-bfff-eaf64d05d9bd",
+          "54fdc9d4-b1d4-4d0f-a203-87cd19d14f63",
+          "0a49cc49-4baa-4dd7-9450-754a6652ecdf",
+          "e9afd558-a5fb-4d70-aef4-f1587b43c0a3",
+          "ddfdcb6d-c68b-4d40-a6dc-f46513ec906f",
+          "48e2f87b-7a0b-45ab-9499-17ca27da337a",
+          "886ba03b-01b7-44da-a650-8509810a2a24",
+          "703a34d3-8edd-498c-bd74-59586f15757a",
+          "488360d2-493b-4595-a2f2-fea0d660493c",
+          "cfb663e4-3b87-4f69-93a4-fa9e12a1766f",
+          "1e8f45e2-1b1b-4072-9531-dfb5bf4215db",
+          "c922d15d-10c8-4b48-b072-581719398ac8",
+          "0556e621-8e9d-4ad2-a48e-234d42f29c07",
+          "0908ef0f-3ffe-418b-93c1-acc26e1adb11",
+          "c25724e6-8698-433a-b9dc-35b57f73537e",
+          "ed2065a9-3c51-43f2-b191-e7f8c08014f6",
+          "db320e27-b38c-49a4-a395-8df422d76084",
+          "e4a83f0b-55b2-4b93-b421-783f5d41d37c",
+          "892119fa-0be9-42d7-aeb6-af07168dcd14",
+          "fc4b5e38-9914-4e85-9d55-a0641f7c74a4",
+          "fdacca5e-25a7-4c20-a88e-4786e8550917",
+          "7921ae05-e875-4aee-97c3-95289485b42e",
+          "715df067-7b44-4a1a-96b9-a651099041f0",
+          "0e2fe202-7984-41d2-9a7c-34a282c35d73",
+          "227316f9-60c3-4ddd-bed1-0c400a29fd83",
+          "6e9bcf25-79a0-4e67-a759-6c544d60e846",
+          "0a63236e-5970-4925-885b-2018f8e58e61",
+          "2a725034-61b7-4a2a-bea6-90ec03e2ae67",
+          "d32a1763-514e-4913-abaa-f892ecbcc9e6",
+          "5ab3c43f-10ad-47b0-9cbd-236b5da20e48",
+          "d0536da8-0580-42d0-97fa-4d325e56de13",
+          "74eadae8-47b4-4333-b967-09c0221eade9",
+          "dad79b9c-b94f-4f6e-9fd6-510ef98d0a00",
+          "4e89437b-66e5-4adc-860f-96055808b6e3",
+          "935a0f17-fbde-4c19-bcd2-fe688b3c6b58",
+          "7ef0a31d-f247-4c5e-b560-c6d7408512bb",
+          "b30f014d-c927-48a4-8613-d06b458aca45",
+          "16b5ce34-c41c-4b02-a23b-c2f9306ae34b",
+          "24725496-7915-4dc7-975e-135fc2faccc7",
+          "9f9b5766-8c6e-4f6f-835b-bcfa07916afa",
+          "0c9e13f3-e7be-498a-92ce-19348d581644",
+          "fa69b909-80ae-4563-a6e2-b4784be022f1",
+          "5df9d54f-86f5-4755-920a-3c9d0148570f",
+          "00e71394-4a6e-43b2-a0dc-16a1cdb3293e",
+          "0c0bce5f-0201-48d7-9652-483a0645b816",
+          "cf4a470e-c795-4112-9d04-fe10c63c8281",
+          "1ccb52e9-f4bc-4546-aea7-5d5cf05fb3f4",
+          "1b22da6c-68f4-4092-afb2-2eeb4a3f3f56",
+          "97e9908c-64ca-4c99-88b8-8961f36cd2e4",
+          "9e6fd213-4824-4bc3-9fb9-aa24d68d4b36",
+          "d7896dc9-fba1-4c0f-a15b-a43c3716a121",
+          "8281d98a-7d70-4cf8-8dcd-2cfe2204e34f",
+          "0ab658e6-421a-44d6-8d03-04a63415cb77",
+          "87730be2-ca10-4fa6-a7ff-7934e0e5d21c",
+          "a96cff01-f3ba-4689-8d2b-7ba625055ead",
+          "d3e45614-30ba-4918-bace-2b34e54e376d",
+          "44d6e85b-7c79-4ea7-a1bc-0c599a851641",
+          "9599eaa3-ab76-4582-a5c7-e9c1646e311e",
+          "e235681c-8ba5-42d0-876b-370037b6969f",
+          "b633c583-3ab1-4ad2-a6f8-d416bfc6c31e",
+          "64038250-793b-48c3-bfb5-8911559b637e",
+          "6ae8436d-7d41-4e8d-993c-7f245512889f",
+          "5cdc23f2-2658-4da3-87e1-cfeb2a189e24",
+          "83e68c03-6f9e-4ffe-aebc-f1dbfe4f4cf2",
+          "1976907e-47cd-4164-9418-90cea4c3ad53",
+          "fcb43667-28b1-43f2-b392-a4c49a309d92",
+          "77e2b699-2ca2-4a3c-95b8-470f05fe51ae",
+          "a5c059bb-cda7-47f1-86d9-7eeca864036b",
+          "2e5eb590-1c44-442c-ab37-88049537a6f4",
+          "485b86df-74e6-4d47-97d7-2f5ed64cdbb1",
+          "ce5c47e2-7c15-4ca9-a1e8-0b8f9ef4fb93",
+          "1baaca67-6293-4124-88b1-3a2a549929cb",
+          "65525ab1-5611-4091-8618-f46a610b5dae",
+          "468dfb0b-f36b-4242-8f52-901be60f8739",
+          "e3641e32-b02d-4294-bd92-d075bedaed57",
+          "09ae54d5-4c6d-4fc7-b465-c682a2748094",
+          "f6e5b6fa-6fd3-40ab-b029-38598dab4247",
+          "d4776a57-9256-4dca-b462-8e2e97292013",
+          "c861adaa-b04e-470d-bc88-faa2c2d4ba5b",
+          "c85b8b95-89b3-4867-8397-d576488d9882",
+          "add1c020-6cf1-4166-9d1f-956f0e5c2e79",
+          "48791972-4ad0-45fa-a63d-6ef722a8e7da",
+          "9d7656c4-7397-41ba-bd6c-ee5ba7a38ac3",
+          "36fc594c-8d4e-482e-a9fd-c56d091614ef",
+          "ed350b1c-f66b-405f-a8e4-f6aef3f2d60a",
+          "3f052766-0eec-4aa7-bcaf-4367489bdcbd"
+        ],
+        "formElementIds": [
+          "92bb3a83-08e5-4b5b-ac40-e4686fcb2177",
+          "af09cc9d-0484-494c-894c-029870ab37ed",
+          "0ede4d2e-0db7-433e-b6ac-a3e8999ecac7",
+          "25ea0fba-8dbd-4739-903c-5673bcf175ad",
+          "274fd09c-7870-4f4c-a04a-035b0b8515c1",
+          "95ab6e40-af18-4ab1-94b3-c01442b78bea",
+          "2596a3bf-74a8-45f1-b8a3-37d40c0aa12c",
+          "b5ad736b-fbe1-4a99-a9e4-5febd5ff573d",
+          "0d4bc873-3d7a-40f8-a001-c923f348eacf",
+          "e6a05299-f858-4b2c-a25e-c69e5f108595",
+          "a3221fbd-fa1f-44ad-adbe-da071e07bf25",
+          "dae52324-14cf-4f0e-8aae-f356bbe8d978"
+        ],
+        "aiPromptIds": [
+          "de0996ba-7c6a-4e1c-8b25-e984656f0bf7",
+          "170fcb67-7271-485a-9e59-064b01a56adc"
+        ],
+        "tags": [
+          "imported"
+        ]
+      }
+    ]
+  }
+}

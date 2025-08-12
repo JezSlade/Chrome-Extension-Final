@@ -1,5 +1,5 @@
 // ui/app.js
-import { appEl, el, rpc, getState, setState, subscribe, renderWithFocus, injectTheme, showToast, closeContextMenu } from './utils.js';
+import * as U from './utils.js';
 import * as Expansions from './modules/expansions.js';
 import * as Variables from './modules/variables.js';
 import * as Forms from './modules/forms.js';
@@ -10,54 +10,59 @@ import * as Help from './modules/help.js';
 const TABS = [Expansions, Variables, Forms, Prompts, Settings, Help];
 
 function Sidebar(){
-  const s = getState();
-  const items = TABS.map(t => el('div', {
+  const s = U.getState();
+  const items = TABS.map(t => U.el('div', {
     class: 'side-item' + (s.tab === t.id ? ' active' : ''),
-    onclick: ()=>{ setState({ tab: t.id }); location.hash = t.id; }
-  }, t.label));
-  return el('div', { class:'sidebar glass-dark' },
-    el('div', { class:'side-header' }, 'ToolForge'),
-    el('div', { class:'side-items' }, ...items)
-  );
+    onclick: ()=>{ U.setState({ tab: t.id }); location.hash = t.id; }
+  }, t.label || t.id));
+  return U.el('div', { class:'sidebar' }, ...items);
 }
 
-export function render(){
-  const root = appEl();
-  if (!root) return;
-  renderWithFocus(() => {
+function Main(){
+  const s = U.getState();
+  const mod = TABS.find(t => t.id === s.tab) || Expansions;
+  let view;
+  try {
+    view = mod.render();
+  } catch (e){
+    view = U.el('div', { class:'pad' }, 'Failed to render: ' + (e && e.message || e));
+  }
+  return U.el('div', { class:'main' }, view);
+}
+
+function Layout(){
+  return U.withSidebar(Sidebar(), Main());
+}
+
+function render(){
+  U.renderWithFocus(()=>{
+    const root = U.appEl();
     root.innerHTML = '';
-    closeContextMenu();
-    const tab = TABS.find(t => t.id === getState().tab) || Variables;
-    const layout = el('div', { class:'layout' },
-      Sidebar(),
-      el('div', { class:'main glass' },
-        el('div', { class:'main-inner' }, tab.render())
-      )
-    );
-    root.appendChild(layout);
+    root.appendChild(Layout());
   });
 }
 
-async function load(){
-  const st = await rpc('GET_STATE');
-  const pr = await rpc('LIST_PROMPTS');
-  const menu = await rpc('GET_MENU');
-  const tpl = await rpc('GET_PROMPT_DATA'); // preload templates for wizard
-  setState({ data: st.data, prompts: pr.items, menu: menu.menu, promptData: tpl.data });
+function applyRoute(){
+  const id = (location.hash && location.hash.slice(1)) || 'expansions';
+  U.setState({ tab: id });
 }
 
-async function boot(){
-  injectTheme();
-  await load();
-  render();
-  // Subscribe the renderer to all state changes
-  subscribe(() => render());
+async function initData(){
+  // Pull initial state from background
+  const st = await U.rpc('GET_STATE');
+  // set defaults if needed
+  const next = Object.assign({ tab:'expansions' }, st || {});
+  U.setState(next);
+}
+
+function mountContextMenuHandlers(){
+  // Close context menu when clicking outside
   document.addEventListener('click', (e)=>{
     const menuEl = document.getElementById('contextMenu');
     if (!menuEl) return;
     if (menuEl.classList.contains('hidden')) return;
     if (menuEl === e.target || menuEl.contains(e.target)) return;
-    closeContextMenu();
+    U.closeContextMenu();
   });
   document.addEventListener('contextmenu', (e)=>{
     if (!e.target.closest('.builder, .list')) return;
@@ -65,5 +70,14 @@ async function boot(){
   });
 }
 
-window.addEventListener('hashchange', ()=>{ setState({ tab: (location.hash && location.hash.slice(1)) || 'expansions' }); });
-boot().catch(err => showToast(String(err && err.message || err)));
+async function boot(){
+  U.injectTheme && U.injectTheme();
+  await initData();
+  applyRoute();
+  render();
+  U.subscribe(render);
+  mountContextMenuHandlers();
+}
+
+window.addEventListener('hashchange', ()=>{ U.setState({ tab: (location.hash && location.hash.slice(1)) || 'expansions' }); });
+boot().catch(err => U.showToast(String(err && err.message || err)));

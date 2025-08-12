@@ -1,71 +1,90 @@
 // ui/modules/expansions.js
+// Rebranded in UI as "Cues". Keeps id to preserve manager wiring.
 import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, openContextMenu, openModal, closeModal, withSidebar, MarkdownEditor, triggerAutoSyncPush, WizardStepper } from '../utils.js';
 
 export const id = 'expansions';
-export const label = 'Expansions';
+export const label = 'Cues';
 
-// Composer state
-let wizard = {
+// Local editor state for Cue composer
+let cueWiz = {
   open: false,
   editingId: null,
-  elements: [],
-  step: 1
+  trigger: '',
+  body: ''
 };
 
 function toolbar(){
   return Toolbar({
     buttons: [
-      el('button', { class:'btn', onclick: startNew }, 'New Expansion')
+      el('button', { class:'btn', onclick: startNew }, 'New Cue')
     ]
   });
 }
 
 function startNew(){
-  wizard = { open: true, editingId: null, elements: [], step: 1 };
-  openExpansionWizardModal('New Expansion');
+  cueWiz = { open: true, editingId: null, trigger: '', body: '' };
+  openCueEditorModal('New Cue');
   setState({});
 }
 
 async function editExisting(exp){
-  const base = Array.isArray(exp.composer) && exp.composer.length
-    ? exp.composer
-    : [{ type: 'text', value: String(exp.replacement || '') }];
-  wizard = { open: true, editingId: exp.id, elements: base.map(x => ({...x})), step: 1 };
-  openExpansionWizardModal('Edit Expansion');
+  cueWiz = {
+    open: true,
+    editingId: exp.id,
+    trigger: exp.trigger || '',
+    body: String(exp.replacement || '')
+  };
+  openCueEditorModal('Edit Cue');
   setState({});
 }
 
-function buildReplacement(){
-  return wizard.elements.map(item=>{
-    if (item.type === 'text') return item.value || '';
-    if (item.type === 'input') return `{{input:${item.label || 'Input'}}}`;
-    if (item.type === 'variable') return item.value ? `{{${item.value}}}` : '';
-    if (item.type === 'clipboard') return `{{clipboard}}`;
-    if (item.type === 'date') return `{{date:+${item.format || '%Y-%m-%d'}}}`;
-    if (item.type === 'uuid') return `{{uuid}}`;
-    return '';
-  }).join('');
-}
+async function saveCue(){
+  const trig = (cueWiz.trigger || '').trim();
+  const body = (cueWiz.body || '').trim();
+  if (!trig){ showToast('Trigger required'); return; }
+  if (!body){ showToast('Body required'); return; }
 
-async function saveWizard(){
-  const rep = buildReplacement();
-  if (!rep.trim()){
-    showToast('Nothing to save');
-    return;
-  }
-  if (wizard.editingId){
-    await rpc('UPDATE_EXPANSION', { id: wizard.editingId, patch: { replacement: rep, composer: wizard.elements } });
+  if (cueWiz.editingId){
+    await rpc('UPDATE_EXPANSION', { id: cueWiz.editingId, patch: { trigger: trig, replacement: body } });
   } else {
-    await rpc('ADD_EXPANSION', { item: { trigger: ':new', replacement: rep, type: 'text', composer: wizard.elements } });
+    await rpc('ADD_EXPANSION', { item: { trigger: trig, replacement: body, type: 'text' } });
   }
-  wizard = { open: false, editingId: null, elements: [], step: 1 };
+  cueWiz = { open:false, editingId:null, trigger:'', body:'' };
   const st = await rpc('GET_STATE');
   setState({ data: st.data });
   triggerAutoSyncPush();
   showToast('Saved');
 }
 
-async function update(id, patch){
+/* ---------- List & cards ---------- */
+function list(){
+  const items = applyFilter(getState().data.expansions || []);
+  return el('div', { class:'grid cols-2 list' }, ...items.map(card));
+}
+
+function card(it){
+  const cm = [
+    { label:'Edit (Cue editor)', onClick: ()=> editExisting(it) },
+    { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: (it.trigger||'')+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); const st = await rpc('GET_STATE'); setState({ data: st.data }); triggerAutoSyncPush(); } },
+    { label:'Delete', onClick: ()=> remove(it.id) }
+  ];
+  return el('div', { class:'card', oncontextmenu:(e)=>{ e.preventDefault(); openContextMenu(e.pageX, e.pageY, cm); } },
+    el('div', { class:'row between' },
+      el('div', { class:'row' }, el('span', { class:'badge' }, 'cue'), el('span', { class:'small' }, `#${it.id}`)),
+      el('div', {},
+        el('button', { class:'btn secondary', onclick: ()=> editExisting(it) }, 'Edit'),
+        el('button', { class:'btn secondary', onclick: ()=> remove(it.id) }, 'Delete')
+      )
+    ),
+    el('div', { class:'row' },
+      el('label', {}, 'Trigger'),
+      el('input', { class:'input', value: it.trigger || '', placeholder: ':trigger', oninput:(e)=> inlineUpdate(it.id, { trigger: e.target.value }) })
+    ),
+    el('div', {}, el('textarea', { oninput:(e)=> inlineUpdate(it.id, { replacement: e.target.value }) }, it.replacement||''))
+  );
+}
+
+async function inlineUpdate(id, patch){
   await rpc('UPDATE_EXPANSION', { id, patch });
   triggerAutoSyncPush();
 }
@@ -77,117 +96,200 @@ async function remove(id){
   showToast('Deleted');
 }
 
-function list(){
-  const items = applyFilter(getState().data.expansions || []);
-  return el('div', { class:'grid cols-2 list' }, ...items.map(card));
+/* ---------- Cue editor (single large editor with toolbars) ---------- */
+
+function insertAtCursor(ta, token){
+  const s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
+  const val = ta.value;
+  ta.value = val.slice(0, s) + token + val.slice(e);
+  const pos = s + token.length;
+  ta.focus();
+  ta.setSelectionRange(pos, pos);
+  ta.dispatchEvent(new Event('input', { bubbles:true }));
 }
 
-function card(it){
-  const cm = [
-    { label:'Edit (wizard)', onClick: ()=> editExisting(it) },
-    { label:'Duplicate', onClick: async ()=>{ const copy = Object.assign({}, it, { id: undefined, trigger: (it.trigger||'')+'_copy' }); await rpc('ADD_EXPANSION', { item: copy }); const st = await rpc('GET_STATE'); setState({ data: st.data }); triggerAutoSyncPush(); } },
-    { label:'Delete', onClick: ()=> remove(it.id) }
-  ];
-  return el('div', { class:'card', oncontextmenu:(e)=>{ e.preventDefault(); openContextMenu(e.pageX, e.pageY, cm); } },
-    el('div', { class:'row between' },
-      el('div', { class:'row' }, el('span', { class:'badge' }, it.type||'text'), el('span', { class:'small' }, `#${it.id}`)),
-      el('div', {},
-        el('button', { class:'btn secondary', onclick: ()=> editExisting(it) }, 'Edit'),
-        el('button', { class:'btn secondary', onclick: ()=> remove(it.id) }, 'Delete')
-      )
-    ),
-    el('div', { class:'row' },
-      el('input', { class:'input', value: it.trigger || '', placeholder: 'Trigger', oninput:(e)=> update(it.id, { trigger: e.target.value }) })
-    ),
-    el('div', {}, el('textarea', { oninput:(e)=> update(it.id, { replacement: e.target.value }) }, it.replacement||'')),
-    it.type === 'regex' ? el('div', {}, el('input', { class:'input', value: it.pattern || '', placeholder:'Regex pattern', oninput:(e)=> update(it.id, { pattern: e.target.value }) })) : null,
-    el('div', { class:'row' },
-      el('label', {}, 'Type'),
-      el('select', { onchange:(e)=> update(it.id, { type: e.target.value }) },
-        el('option', { value:'text', selected: it.type==='text' }, 'text'),
-        el('option', { value:'regex', selected: it.type==='regex' }, 'regex')
-      )
-    )
+function openInsertInputModal(ta){
+  const body = el('div', {},
+    el('label', {}, 'Label'),
+    el('input', { class:'input', placeholder:'Your label', value:'', id:'insLabel' }),
+    el('label', {}, 'Key (optional)'),
+    el('input', { class:'input', placeholder:'key_name', value:'', id:'insKey' })
   );
-}
-
-/* Wizard UI */
-
-function Stepper(){
-  const steps = [
-    { n:1, label:'Select first element' },
-    { n:2, label:'Edit element' },
-    { n:3, label:'Add next or Save' }
-  ];
-  return WizardStepper(steps, wizard.step);
-}
-
-function openElementEditorModal(item){
-  const body = el('div', {});
-  if (item.type === 'text'){
-    body.appendChild(el('label', {}, 'Text'));
-    body.appendChild(MarkdownEditor({ value: item.value || '', oninput:(v)=>{ item.value = v; } }));
-  } else if (item.type === 'input'){
-    body.appendChild(el('label', {}, 'Prompt label'));
-    body.appendChild(el('input', { class:'input', value: item.label || 'Input', 'data-focus-key':'exp-composer-label', oninput:(e)=>{ item.label = e.target.value; } }));
-  } else if (item.type === 'variable'){
-    const vars = (getState().data.variables || []);
-    body.appendChild(el('label', {}, 'Pick variable'));
-    body.appendChild(el('select', { class:'input', onchange:(e)=>{ item.value = e.target.value; } },
-      el('option', { value:'' }, 'Select variable...'),
-      ...vars.map(v => el('option', { value:v.name, selected: item.value === v.name }, `${v.name} (${v.type||'text'})`))
-    ));
-  } else if (item.type === 'date'){
-    body.appendChild(el('label', {}, 'Date format'));
-    body.appendChild(el('input', { class:'input', value: item.format || '%Y-%m-%d', 'data-focus-key':'exp-composer-date', oninput:(e)=>{ item.format = e.target.value; } }));
-    body.appendChild(el('div', { class:'small' },
-      'Format tokens: %Y year 4-digit, %m month 2-digit, %d day, %H hour, %M minute, %S second. Example: %Y-%m-%d.'
-    ));
-  } else {
-    body.appendChild(el('div', { class:'small' }, 'No options for this element'));
-  }
-
   openModal({
-    title: 'Edit Element',
+    title: 'Insert: User Input',
     body,
     actions: [
       el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
-      el('button', { class:'btn', onclick: ()=>{ wizard.step = 3; setState({}); closeModal(); } }, 'Apply')
+      el('button', { class:'btn', onclick: ()=>{
+        const lbl = body.querySelector('#insLabel').value.trim() || 'Input';
+        const key = body.querySelector('#insKey').value.trim();
+        const token = key ? `{{input:${key}|${lbl}}}` : `{{input:${lbl}}}`;
+        closeModal();
+        insertAtCursor(ta, token);
+      } }, 'Insert')
     ]
   });
 }
 
-function elementPicker(){
-  const btn = (label, on)=> el('button', { class:'btn', onclick:on }, label);
-  return el('div', { class:'row' },
-    btn('Text', ()=>{ const it = { type:'text', value:'' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
-    btn('User input', ()=>{ const it = { type:'input', label:'Label' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
-    btn('Variable', ()=>{ const it = { type:'variable', value:'' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
-    btn('Clipboard', ()=>{ wizard.elements.push({ type:'clipboard' }); wizard.step = 3; setState({}); }),
-    btn('Date', ()=>{ const it = { type:'date', format:'%Y-%m-%d' }; wizard.elements.push(it); wizard.step = 2; setState({}); openElementEditorModal(it); }),
-    btn('UUID', ()=>{ wizard.elements.push({ type:'uuid' }); wizard.step = 3; setState({}); })
+function openInsertSelectModal(ta){
+  const body = el('div', {},
+    el('label', {}, 'Label'),
+    el('input', { class:'input', placeholder:'Select label', value:'', id:'selLabel' }),
+    el('label', {}, 'Options (comma separated)'),
+    el('input', { class:'input', placeholder:'one, two, three', value:'', id:'selOpts' })
   );
+  openModal({
+    title: 'Insert: Dropdown',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
+      el('button', { class:'btn', onclick: ()=>{
+        const lbl = body.querySelector('#selLabel').value.trim() || 'Select';
+        const opts = (body.querySelector('#selOpts').value || '').split(',').map(s=>s.trim()).filter(Boolean);
+        const token = `{{select:${lbl}|${opts.join('|')}}}`;
+        closeModal();
+        insertAtCursor(ta, token);
+      } }, 'Insert')
+    ]
+  });
 }
 
-function composerPreview(){
-  return el('div', { class:'card' },
-    el('div', { class:'small' }, 'Preview (template)'),
-    el('textarea', { class:'input big', readonly:true }, buildReplacement())
+function openInsertDateModal(ta){
+  const body = el('div', {},
+    el('label', {}, 'Format'),
+    el('input', { class:'input', value:'%Y-%m-%d', id:'fmt' }),
+    el('div', { class:'small' }, 'Tokens: %Y year, %m month, %d day, %H hour, %M minute, %S second.')
   );
+  openModal({
+    title: 'Insert: Date/Time',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
+      el('button', { class:'btn', onclick: ()=>{
+        const fmt = body.querySelector('#fmt').value || '%Y-%m-%d';
+        closeModal();
+        insertAtCursor(ta, `{{date:+${fmt}}}`);
+      } }, 'Insert')
+    ]
+  });
 }
 
-function composerControls(){
-  return el('div', { class:'row' },
-    el('button', { class:'btn secondary', onclick: ()=>{ wizard.step = 1; setState({}); } }, 'Add another'),
-    el('button', { class:'btn', onclick: saveWizard }, 'Save')
+function openInsertVariableModal(ta){
+  const vars = (getState().data.variables || []);
+  const body = el('div', {},
+    el('label', {}, 'Pick variable'),
+    el('select', { class:'input', id:'varPick' },
+      el('option', { value:'' }, 'Select...'),
+      ...vars.map(v => el('option', { value:v.name }, `${v.name} (${v.type||'text'})`))
+    )
   );
+  openModal({
+    title: 'Insert: Variable',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
+      el('button', { class:'btn', onclick: ()=>{
+        const name = body.querySelector('#varPick').value;
+        if (name) insertAtCursor(ta, `{{${name}}}`);
+        closeModal();
+      } }, 'Insert')
+    ]
+  });
 }
 
+function openInsertAIElementModal(ta){
+  // Simple persona + optional template selector. Produces a portable token.
+  const state = getState();
+  const tplMap = (state.promptData && state.promptData.templates) || {};
+  const personaList = [
+    'Market Analyst',
+    'Technical Writer',
+    'Customer Support'
+  ];
+  const body = el('div', {},
+    el('label', {}, 'Persona'),
+    el('select', { class:'input', id:'aiPersona' },
+      ...personaList.map(p => el('option', { value:p }, p))
+    ),
+    el('label', {}, 'Template (optional)'),
+    el('select', { class:'input', id:'aiTpl' },
+      el('option', { value:'' }, 'None'),
+      ...Object.entries(tplMap).map(([k,v]) => el('option', { value:k }, v.label || k))
+    )
+  );
+  openModal({
+    title: 'Insert: AI Element',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Cancel'),
+      el('button', { class:'btn', onclick: ()=>{
+        const persona = body.querySelector('#aiPersona').value;
+        const tpl = body.querySelector('#aiTpl').value;
+        const token = tpl ? `{{ai persona="${persona}" template="${tpl}"}}` : `{{ai persona="${persona}"}}`;
+        closeModal();
+        insertAtCursor(ta, token);
+      } }, 'Insert')
+    ]
+  });
+}
+
+function cueEditorBody(){
+  const wrap = el('div', {});
+  // Trigger input
+  wrap.appendChild(el('div', { class:'row' },
+    el('label', {}, 'Trigger'),
+    el('input', { class:'input', placeholder:':trigger', value: cueWiz.trigger || '', oninput:(e)=>{ cueWiz.trigger = e.target.value; } })
+  ));
+
+  // Main Markdown editor
+  const editor = MarkdownEditor({
+    value: cueWiz.body || '',
+    oninput: (v)=>{ cueWiz.body = v; },
+    focusKey: 'cue-body'
+  });
+  const ta = editor._textarea;
+
+  // Form Elements toolbar
+  const formBar = el('div', { class:'row', style:'margin:6px 0' },
+    el('button', { class:'btn', onclick: ()=> openInsertInputModal(ta) }, 'Insert Input'),
+    el('button', { class:'btn', onclick: ()=> openInsertSelectModal(ta) }, 'Insert Dropdown'),
+    el('button', { class:'btn', onclick: ()=> openInsertDateModal(ta) }, 'Insert Date'),
+    el('button', { class:'btn', onclick: ()=> openInsertVariableModal(ta) }, 'Insert Variable'),
+    el('button', { class:'btn', onclick: ()=> insertAtCursor(ta, '{{clipboard}}') }, 'Insert Clipboard'),
+    el('button', { class:'btn', onclick: ()=> insertAtCursor(ta, '{{uuid}}') }, 'Insert UUID'),
+    el('button', { class:'btn', onclick: ()=> insertAtCursor(ta, '{{cursor}}') }, 'Insert Cursor')
+  );
+
+  // AI Elements toolbar
+  const aiBar = el('div', { class:'row', style:'margin:6px 0' },
+    el('button', { class:'btn', onclick: ()=> openInsertAIElementModal(ta) }, 'Insert AI Element')
+  );
+
+  wrap.appendChild(formBar);
+  wrap.appendChild(aiBar);
+  wrap.appendChild(editor);
+
+  return wrap;
+}
+
+function openCueEditorModal(title){
+  const body = cueEditorBody();
+  openModal({
+    title: title || 'Cue',
+    body,
+    actions: [
+      el('button', { class:'btn secondary', onclick: closeModal }, 'Close'),
+      el('button', { class:'btn', onclick: ()=>{ saveCue().then(()=> closeModal()); } }, 'Save')
+    ]
+  });
+}
+
+/* ---------- Library sidebar ---------- */
 function librarySidebar(){
   const list = applyFilter(getState().data.expansions || []);
-  const side = el('div', { class:'card' }, el('h3', {}, 'Library'));
+  const side = el('div', { class:'card' }, el('h3', {}, 'Cues'));
   if (!list.length){
-    side.appendChild(el('div', { class:'small' }, 'No expansions yet.'));
+    side.appendChild(el('div', { class:'small' }, 'No cues yet.'));
     return side;
   }
   list.forEach(ex => {
@@ -198,36 +300,10 @@ function librarySidebar(){
   return side;
 }
 
-function composer(){
-  return el('div', { class:'card' },
-    el('h3', {}, wizard.editingId ? 'Edit Expansion' : 'New Expansion'),
-    Stepper(),
-    wizard.step === 1 ? elementPicker() : null,
-    wizard.step === 2 ? el('div', { class:'small' }, 'Editor opened in modal. Close it to continue.') : null,
-    el('div', { class:'divider' }),
-    composerPreview(),
-    composerControls()
-  );
-}
-
-function openExpansionWizardModal(title){
-  const body = el('div', {}, composer());
-  openModal({
-    title: title || 'Expansion',
-    body,
-    actions: [
-      el('button', { class:'btn secondary', onclick: closeModal }, 'Close'),
-      el('button', { class:'btn', onclick: ()=>{ saveWizard().then(()=> closeModal()); } }, 'Save')
-    ]
-  });
-}
-
 export function render(){
   const main = el('div', {});
-  main.appendChild(el('div', { class:'card' }, el('h3', {}, 'Expansions')));
+  main.appendChild(el('div', { class:'card' }, el('h3', {}, 'ToolForge — Cues')));
   main.appendChild(toolbar());
   main.appendChild(list());
-  const content = el('div', {});
-  content.appendChild(main);
-  return withSidebar(librarySidebar(), content);
+  return withSidebar(librarySidebar(), main);
 }
