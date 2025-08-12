@@ -1,7 +1,12 @@
 // ui/modules/variables.js
 import { el, rpc, getState, setState, Toolbar, applyFilter, showToast, uid, openContextMenu } from '../utils.js';
+
 export const id = 'variables';
 export const label = 'Variables';
+
+// Wizard state
+let wizard = { open:false, step:1, draft:{ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null } };
+
 function header(){
   return el('div', { class:'card' },
     el('h3', {}, 'Variables'),
@@ -20,27 +25,39 @@ function header(){
     )
   );
 }
+
 function toolbar(){
-  return Toolbar({ buttons: [ el('button', { class:'btn', onclick: addVariable }, 'Add Variable') ] });
+  return Toolbar({ buttons: [ el('button', { class:'btn', onclick: startWizard }, 'New Variable') ] });
 }
-async function addVariable(){
-  const item = { name: 'newVar', type: 'text', default: '' };
-  await rpc('ADD_VARIABLE', { item });
+
+function startWizard(){
+  wizard = { open:true, step:1, draft:{ name:'', type:'text', default:'', options:[], linkedFormId:null, linkedPromptId:null } };
+  setState({});
+}
+
+async function saveWizard(){
+  const d = wizard.draft;
+  if (!d.name.trim()){ showToast('Name required'); return; }
+  await rpc('ADD_VARIABLE', { item: d });
+  wizard = { open:false, step:1, draft:{ name:'', type:'text', default:'', options:[] } };
   await reload();
-  setState({ tab: 'variables' });
-  showToast('Added');
+  showToast('Saved');
 }
+
 async function updateVariable(id, patch){ await rpc('UPDATE_VARIABLE', { id, patch }); }
 async function deleteVariable(id){ await rpc('DELETE_VARIABLE', { id }); await reload(); showToast('Deleted'); }
 async function reload(){ const st = await rpc('GET_STATE'); setState({ data: st.data }); }
+
 function list(){
   const items = applyFilter(getState().data.variables || []);
   return el('div', { class:'grid cols-2 list' }, ...items.map(card));
 }
+
 function card(it){
   const cm = [ { label:'Delete', onClick: ()=> deleteVariable(it.id) } ];
   const typeInput = el('input', { class:'input', list:'varTypes', value: it.type || 'text', oninput:(e)=> updateVariable(it.id, { type: e.target.value }) });
   const typeList = datalist();
+
   const ext = [];
   if (it.type === 'select'){
     ext.push(el('div', { class:'small' }, 'Options (comma separated)'));
@@ -68,6 +85,7 @@ function card(it){
     ext.push(el('div', { class:'small' }, 'Format string'));
     ext.push(el('input', { class:'input', value: it.default || '%Y-%m-%d', oninput:(e)=> updateVariable(it.id, { default: e.target.value }) }));
   }
+
   return el('div', { class:'card', oncontextmenu:(e)=>{ openContextMenu(e.pageX, e.pageY, cm); } },
     el('div', { class:'row between' },
       el('div', { class:'row' }, el('span', { class:'badge' }, it.type||'text'), el('span', { class:'small' }, `#${it.id}`)),
@@ -82,6 +100,7 @@ function card(it){
     ...ext
   );
 }
+
 function datalist(){
   return el('datalist', { id:'varTypes' },
     el('option', { value:'text' }),
@@ -97,10 +116,94 @@ function datalist(){
     el('option', { value:'json' })
   );
 }
+
+/* Wizard UI */
+
+function Stepper(){
+  const steps = [
+    { n:1, label:'Name' },
+    { n:2, label:'Type' },
+    { n:3, label:'Content' }
+  ];
+  return el('div', { class:'stepper' },
+    ...steps.map(s => el('div', { class:'step' + (wizard.step === s.n ? ' active' : '') }, `${s.n}. ${s.label}`))
+  );
+}
+
+function wizardView(){
+  if (!wizard.open) return null;
+  return el('div', { class:'card' },
+    el('h3', {}, 'New Variable'),
+    Stepper(),
+    wizard.step === 1 ? nameStep() : null,
+    wizard.step === 2 ? typeStep() : null,
+    wizard.step === 3 ? contentStep() : null,
+    el('div', { class:'divider' }),
+    el('div', { class:'row' },
+      el('button', { class:'btn secondary', onclick: ()=>{ wizard.open=false; setState({}); } }, 'Cancel'),
+      el('button', { class:'btn', onclick: saveWizard }, 'Save')
+    )
+  );
+}
+
+function nameStep(){
+  return el('div', {},
+    el('label', {}, 'Variable name'),
+    el('input', { class:'input', placeholder:'e.g. customer_name', value: wizard.draft.name, oninput:(e)=>{ wizard.draft.name = e.target.value; } }),
+    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ if (!wizard.draft.name.trim()) return; wizard.step = 2; setState({}); } }, 'Next'))
+  );
+}
+
+function typeStep(){
+  const types = ['text','textarea','number','date','select','prompt','file','form','formatDate','boolean','json'];
+  return el('div', {},
+    el('label', {}, 'Type'),
+    el('select', { class:'input', onchange:(e)=>{ wizard.draft.type = e.target.value; } },
+      ...types.map(t => el('option', { value:t, selected: wizard.draft.type===t }, t))
+    ),
+    el('div', { class:'row' }, el('button', { class:'btn', onclick: ()=>{ wizard.step = 3; setState({}); } }, 'Next'))
+  );
+}
+
+function contentStep(){
+  const d = wizard.draft;
+  const wrap = el('div', {});
+  // Common default
+  wrap.appendChild(el('div', {}, el('label', {}, 'Default'), el('input', { class:'input', value:d.default||'', oninput:(e)=>{ d.default = e.target.value; } })));
+
+  if (d.type === 'select'){
+    wrap.appendChild(el('div', { class:'small' }, 'Options (comma separated)'));
+    wrap.appendChild(el('input', { class:'input', placeholder:'one, two, three', oninput:(e)=>{ d.options = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); } }));
+  }
+  if (d.type === 'form'){
+    const forms = getState().data.forms || [];
+    wrap.appendChild(el('div', { class:'small' }, 'Linked form'));
+    wrap.appendChild(el('select', { class:'input', onchange:(e)=>{ d.linkedFormId = Number(e.target.value)||null; } },
+      el('option', { value:'' }, 'Select form...'),
+      ...forms.map(f => el('option', { value:String(f.id) }, `#${f.id} ${f.name}`))
+    ));
+  }
+  if (d.type === 'prompt'){
+    const prompts = getState().prompts || [];
+    wrap.appendChild(el('div', { class:'small' }, 'Linked prompt'));
+    wrap.appendChild(el('select', { class:'input', onchange:(e)=>{ d.linkedPromptId = Number(e.target.value)||null; } },
+      el('option', { value:'' }, 'Select saved prompt...'),
+      ...prompts.map(p => el('option', { value:String(p.id) }, `#${p.id} ${p.name}`))
+    ));
+  }
+  if (d.type === 'formatDate'){
+    wrap.appendChild(el('div', { class:'small' }, 'Format string like %Y-%m-%d'));
+  }
+
+  return wrap;
+}
+
 export function render(){
   const wrap = el('div', {});
   wrap.appendChild(header());
   wrap.appendChild(toolbar());
+  const w = wizardView();
+  if (w) wrap.appendChild(w);
   wrap.appendChild(list());
   return wrap;
 }

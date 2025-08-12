@@ -6,30 +6,44 @@ import * as Forms from './modules/forms.js';
 import * as Prompts from './modules/prompts.js';
 import * as Settings from './modules/settings.js';
 import * as Help from './modules/help.js';
+
 const TABS = [Expansions, Variables, Forms, Prompts, Settings, Help];
-function Nav(){
+
+function Sidebar(){
   const s = getState();
   const items = TABS.map(t => el('div', {
-    class: 'tab' + (s.tab === t.id ? ' active' : ''),
+    class: 'side-item' + (s.tab === t.id ? ' active' : ''),
     onclick: ()=>{ setState({ tab: t.id }); location.hash = t.id; render(); }
   }, t.label));
-  return el('div', { class: 'nav' }, ...items);
+  return el('div', { class:'sidebar glass-dark' },
+    el('div', { class:'side-header' }, 'ToolForge'),
+    el('div', { class:'side-items' }, ...items)
+  );
 }
+
 async function load(){
   const st = await rpc('GET_STATE');
   const pr = await rpc('LIST_PROMPTS');
   const menu = await rpc('GET_MENU');
   setState({ data: st.data, prompts: pr.items, menu: menu.menu });
 }
+
 export function render(){
   const root = appEl();
   if (!root) return;
   root.innerHTML = '';
   closeContextMenu();
-  root.appendChild(Nav());
-  const tab = TABS.find(t => t.id === getState().tab) || Variables;
-  root.appendChild(tab.render());
+
+  const layout = el('div', { class:'layout' },
+    Sidebar(),
+    el('div', { class:'main glass' },
+      el('div', { class:'main-inner' }, (TABS.find(t => t.id === getState().tab) || Variables).render())
+    )
+  );
+
+  root.appendChild(layout);
 }
+
 async function boot(){
   injectTheme();
   await load();
@@ -46,5 +60,6 @@ async function boot(){
     e.preventDefault();
   });
 }
+
 window.addEventListener('hashchange', ()=>{ setState({ tab: (location.hash && location.hash.slice(1)) || 'expansions' }); render(); });
 boot().catch(err => showToast(String(err && err.message || err)));
