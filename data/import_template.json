@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "data": {
+    "_meta": {
+      "schemaVersion": 1,
+      "createdAt": 0,
+      "updatedAt": 0
+    },
+    "settings": {
+      "autoExpand": true,
+      "triggerPrefix": ":",
+      "caseSensitive": false,
+      "theme": "system"
+    },
+    "variables": [
+      {
+        "id": "date",
+        "type": "date",
+        "default": "%Y-%m-%d",
+        "label": "Current Date"
+      },
+      {
+        "id": "time",
+        "type": "time",
+        "default": "%H:%M",
+        "label": "Current Time"
+      }
+    ],
+    "cues": [
+      {
+        "id": "cue_email",
+        "trigger": ":email",
+        "template": "john.doe@example.com",
+        "enabled": true
+      },
+      {
+        "id": "cue_sig",
+        "trigger": ":sig",
+        "template": "Best regards,\nJohn Doe",
+        "enabled": true
+      },
+      {
+        "id": "cue_date",
+        "trigger": ":date",
+        "template": "{{date}}",
+        "enabled": true
+      }
+    ]
+  }
+}

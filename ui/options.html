@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ToolForge Settings</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="card" style="margin-bottom: 16px;">
+        <h2>Settings</h2>
+        <div class="row">
+          <div class="col">
+            <label>Trigger Prefix</label>
+            <input id="triggerPrefix" type="text" placeholder=":" maxlength="3">
+          </div>
+          <div class="col">
+            <label>Auto Expand</label>
+            <select id="autoExpand">
+              <option value="true">On</option>
+              <option value="false">Off</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>Theme</label>
+            <select id="theme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <h2>Cues</h2>
+        <div class="row" style="margin-bottom: 8px;">
+          <button id="addCue" class="primary">Add Cue</button>
+          <button id="exportData">Export</button>
+          <input id="importFile" type="file" accept="application/json">
+          <button id="importData">Import</button>
+        </div>
+        <table id="cuesTable" style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th>Enabled</th>
+              <th>Trigger</th>
+              <th>Template</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Variables</h2>
+        <div class="row" style="margin-bottom: 8px;">
+          <button id="addVar" class="primary">Add Variable</button>
+        </div>
+        <table id="varsTable" style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Label</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

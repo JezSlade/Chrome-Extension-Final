@@ -149,3 +149,72 @@ Output & Documentation
 User Interface
 
 [ ] Follow modern UI/UX principles to create a clean, intuitive, and responsive design.
+
+
+
+# Variable Types
+Input Fields & Variables
+
+[ ] Text Variables: For inserting text strings like names, topics, or stock tickers.
+
+[ ] Custom Variables: User-defined variables that can be used and reused across snippets.
+
+[ ] Numerical Variables: For defining quantities, ranges, or time horizons (e.g., word count, number of days).
+
+[ ] Document Variables: For injecting large blocks of text or entire documents for analysis.
+
+Selection & Control
+
+[ ] Drop-down Menus: To select a single predefined option from a list (e.g., tone, output format, model selection).
+
+[ ] Checkboxes: To include or exclude specific sections, instructions, or features.
+
+[ ] Multi-select Lists: To choose multiple predefined options (e.g., a list of technical indicators).
+
+[ ] Boolean Toggles: A simple true/false switch to enable or disable a specific feature or constraint.
+
+Dynamic & Automated Content
+
+[ ] Dynamic Placeholders: Automatically insert real-time data like dates, times, and clipboard content.
+
+[ ] Date and Time Arithmetic: To calculate and insert dates in the past or future.
+
+[ ] Mathematical Expressions: To perform simple calculations within a snippet.
+
+[ ] Executable Scripts: To run JavaScript or other scripts for advanced automation.
+
+Specialized Variables
+
+[ ] Instructional Variables: For swapping in different AI commands (e.g., "summarize," "critique").
+
+[ ] Timeframe Variables: To define a specific date range (e.g., start and end dates) for data analysis.
+
+[ ] Filtering Criteria: A combination of variables to screen and filter data based on specific criteria.
+
+
+# Extension Components
+Popup: This is a very common UI component, as it provides a quick and easy way for users to interact with an extension.
+
+Content Scripts: Many extensions need to interact with the web pages the user is visiting, making content scripts a frequent integration.
+
+Background Scripts: These are essential for many extensions to handle events and maintain state, even when no other UI is visible.
+
+Options Page: Most extensions that require user configuration will have an options page.
+
+Badges: This is a simple and effective way to provide visual feedback, so it's used frequently.
+
+Context Menus: Useful for adding functionality to a right-click menu, but not all extensions need this.
+
+Omnibox: This is less common, as it's typically used by extensions that provide a search or command-line-like interface.
+
+New Tab Page: This is a more specialized component, used by extensions that aim to change the new tab experience.
+
+Notifications: Used by extensions that need to alert the user to something, but not a core part of every extension.
+
+DevTools Panel: This is a niche component, primarily used by extensions for developers.
+
+Side Panel: A newer and more specialized UI element.
+
+Commands: Keyboard shortcuts are a feature that many extensions offer but aren't the primary mode of interaction.
+
+Themes: This is the most specialized UI component, as its sole purpose is to change the browser's appearance.

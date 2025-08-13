@@ -1,71 +1,32 @@
-// ui/popup.js - ToolForge v2.1.0
-// Push and Pull wired to background sync with visible results.
-
-(function(){
-  const $ = (s) => document.querySelector(s);
-  const toast = (msg) => {
-    const t = $('#toast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    setTimeout(()=>{ t.style.display = 'none'; }, 1600);
-  };
-
-  async function rpc(type, payload){
-    return new Promise((resolve) => chrome.runtime.sendMessage({ type, ...(payload||{}) }, resolve));
-  }
-
-  function fmtCounts(r){
-    const c = r.counts || {};
-    return `expansions: ${c.expansions || 0}, variables: ${c.variables || 0}, forms: ${c.forms || 0}, prompts: ${c.prompts || 0}, menu: ${c.menu || 0}`;
-  }
-  function fmtBytes(r){
-    const b = r.bytes || {};
-    const ks = Object.keys(b).map(k => `${k}: ${b[k]} bytes`).join(' • ');
-    return ks || 'n/a';
-  }
-  function renderResult(ok, res){
-    const el = $('#result');
-    if (!ok){
-      el.innerHTML = `<div class="err">Error: ${res && res.error ? res.error : 'Unknown error'}</div>`;
-      return;
-    }
-    const r = res.result || {};
-    el.innerHTML = [
-      `<div class="ok">Success</div>`,
-      `<div>Op: <code>${r.op || ''}</code></div>`,
-      `<div>From: <code>${r.sourceArea || ''}</code> → To: <code>${r.targetArea || ''}</code></div>`,
-      `<div>When: <code>${r.timestamp || ''}</code></div>`,
-      `<div>Counts: ${fmtCounts(r)}</div>`,
-      `<div>Bytes: ${fmtBytes(r)}</div>`
-    ].join('');
-  }
-  function renderArea(state){
-    const el = $('#area');
-    if (!state) { el.textContent = ''; return; }
-    el.innerHTML = `Active storage area: <code>${state.config && state.config.storageArea || 'sync'}</code>`;
-  }
-
-  async function refreshArea(){
-    const res = await rpc('GET_STATE');
-    if (res && res.ok) renderArea(res.data);
-  }
-
-  // Wire buttons
-  $('#push').addEventListener('click', async ()=>{
-    const res = await rpc('SYNC_PUSH');
-    renderResult(res && res.ok, res);
-    toast(res && res.ok ? 'Pushed to Sync' : 'Push failed');
+// ui/popup.js - minimal popup to show sync health and link to options
+async function getState() {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: 'GET_STATE' }, resolve);
   });
-  $('#pull').addEventListener('click', async ()=>{
-    const res = await rpc('SYNC_PULL');
-    renderResult(res && res.ok, res);
-    toast(res && res.ok ? 'Pulled to Local' : 'Pull failed');
-  });
-  $('#openManager').addEventListener('click', async ()=>{
-    const url = chrome.runtime.getURL('ui/manager.html');
-    try { await chrome.tabs.create({ url }); } catch {}
-  });
+}
 
-  // Initial
-  refreshArea().catch(()=>{});
-})();
+async function forcePull() {
+  // In MV3 storage sync is auto. This button just refreshes local state visual.
+  const res = await getState();
+  render(res);
+}
+
+function render(res) {
+  const el = document.getElementById('syncStatus');
+  if (!res || !res.ok) {
+    el.textContent = "Sync status: error";
+    return;
+  }
+  const s = res.state;
+  const meta = s?._meta;
+  const when = meta?.updatedAt ? new Date(meta.updatedAt).toLocaleString() : "unknown";
+  el.textContent = `Sync status: OK. Updated ${when}`;
+}
+
+document.getElementById('openOptions').addEventListener('click', () => {
+  chrome.runtime.openOptionsPage();
+});
+
+document.getElementById('forceSync').addEventListener('click', forcePull);
+
+getState().then(render);
