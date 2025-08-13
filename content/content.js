@@ -1,117 +1,81 @@
-// content/content.js - input and contentEditable expansion
-import { loadCuesAndVars, findCueByTrigger, applyCue } from "../js/cues.js";
+import { renderTemplate } from "../js/cues.js";
 
 let STATE = { cues: [], vars: {}, settings: {} };
 
 async function refreshState() {
-  const { cues, vars, settings } = await loadCuesAndVars();
-  STATE = { cues, vars, settings };
+  const data = await chrome.storage.sync.get('__STATE__');
+  const state = data.__STATE__ || {};
+  const mapVars = {};
+  for (const v of state.variables || []) {
+    mapVars[v.id] = { type: v.type, default: v.default, value: v.default ?? "" };
+  }
+  STATE = { cues: (state.cues || []).filter(c=>c.enabled!==false), vars: mapVars, settings: state.settings || {} };
 }
+chrome.runtime.onMessage.addListener((msg)=>{ if (msg?.type==='STATE_CHANGED') refreshState(); });
 
-function getActiveEditable() {
+function activeEditable() {
   const el = document.activeElement;
   if (!el) return null;
-  const isInput = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
-  if (isInput) return el;
+  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return el;
   if (el.isContentEditable) return el;
   return null;
 }
 
-function replaceAtCursorInTextInput(el, trigger, replacement) {
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
-  const val = el.value;
-  // Find last occurrence of trigger before cursor
-  const before = val.slice(0, start);
+function replaceInInput(el, trigger, repl) {
+  const start = el.selectionStart, end = el.selectionEnd;
+  const before = el.value.slice(0, start);
   const idx = before.lastIndexOf(trigger);
   if (idx === -1) return false;
-  const newVal = before.slice(0, idx) + replacement + val.slice(end);
-  const newPos = idx + replacement.length;
-  el.value = newVal;
-  el.setSelectionRange(newPos, newPos);
+  el.value = before.slice(0, idx) + repl + el.value.slice(end);
+  const pos = idx + repl.length;
+  el.setSelectionRange(pos, pos);
   el.dispatchEvent(new Event('input', { bubbles: true }));
   return true;
 }
 
-function replaceAtCursorInContentEditable(el, trigger, replacement) {
+function replaceInCE(el, trigger, repl) {
   const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return false;
+  if (!sel || !sel.rangeCount) return false;
   const range = sel.getRangeAt(0);
-  // Build context string around caret to find trigger
-  const context = range.startContainer;
-  if (!context) return false;
-  // For simplicity, operate on the text node containing the caret
-  const node = context.nodeType === Node.TEXT_NODE ? context : range.startContainer.childNodes[range.startOffset - 1];
-  if (!node || node.nodeType !== Node.TEXT_NODE) return false;
-  const text = node.nodeValue;
-  const caretPos = range.startOffset;
-  const left = text.slice(0, caretPos);
+  const node = range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer : null;
+  if (!node) return false;
+  const left = node.nodeValue.slice(0, range.startOffset);
   const idx = left.lastIndexOf(trigger);
   if (idx === -1) return false;
-  const newText = left.slice(0, idx) + replacement + text.slice(caretPos);
-  node.nodeValue = newText;
-  // Move caret to end of inserted text
-  const newCaret = idx + replacement.length;
+  node.nodeValue = left.slice(0, idx) + repl + node.nodeValue.slice(range.startOffset);
+  const pos = idx + repl.length;
   const r = document.createRange();
-  r.setStart(node, newCaret);
-  r.setEnd(node, newCaret);
-  sel.removeAllRanges();
-  sel.addRange(r);
+  r.setStart(node, pos); r.setEnd(node, pos);
+  sel.removeAllRanges(); sel.addRange(r);
   return true;
 }
 
 async function tryExpand(trigger) {
-  const cue = findCueByTrigger(STATE.cues, trigger);
+  const cue = STATE.cues.find(c => c.trigger === trigger);
   if (!cue) return false;
-  const out = applyCue(cue, STATE.vars);
-  const el = getActiveEditable();
+  const out = renderTemplate(cue.template, STATE.vars);
+  const el = activeEditable();
   if (!el) return false;
-  let ok = false;
-  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-    ok = replaceAtCursorInTextInput(el, trigger, out);
-  } else if (el.isContentEditable) {
-    ok = replaceAtCursorInContentEditable(el, trigger, out);
-  }
-  return ok;
+  return el.isContentEditable ? replaceInCE(el, trigger, out) : replaceInInput(el, trigger, out);
 }
 
-function observeInputs() {
-  const handler = async (e) => {
+function watch() {
+  document.addEventListener('input', async () => {
     if (!STATE.settings.autoExpand) return;
-    const triggerPrefix = STATE.settings.triggerPrefix || ":";
-    // Find last word that begins with triggerPrefix
-    const el = getActiveEditable();
-    if (!el) return;
-    let text = "";
-    let caret = 0;
-    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      text = el.value;
-      caret = el.selectionStart || 0;
-    } else if (el.isContentEditable) {
-      const sel = window.getSelection();
-      if (sel && sel.rangeCount) {
-        const range = sel.getRangeAt(0);
-        const node = range.startContainer;
-        if (node && node.nodeType === Node.TEXT_NODE) {
-          text = node.nodeValue || "";
-          caret = range.startOffset || 0;
-        }
-      }
+    const el = activeEditable(); if (!el) return;
+    let text = "", caret = 0;
+    if (el.isContentEditable) {
+      const sel = getSelection(); if (!sel || !sel.rangeCount) return;
+      const r = sel.getRangeAt(0);
+      if (r.startContainer.nodeType !== Node.TEXT_NODE) return;
+      text = r.startContainer.nodeValue || ""; caret = r.startOffset;
+    } else {
+      text = el.value; caret = el.selectionStart || 0;
     }
     const left = text.slice(0, caret);
-    const match = left.match(/(:[A-Za-z0-9_\-]+)$/);
-    if (!match) return;
-    const trig = match[1];
-    await tryExpand(trig);
-  };
-
-  document.addEventListener('input', handler, true);
+    const m = left.match(/(:[A-Za-z0-9_\-]+)$/);
+    if (!m) return;
+    await tryExpand(m[1]);
+  }, true);
 }
-
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg && msg.type === 'STATE_CHANGED') {
-    refreshState();
-  }
-});
-
-refreshState().then(observeInputs).catch(() => {});
+refreshState().then(watch);

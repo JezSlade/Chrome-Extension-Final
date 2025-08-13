@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Variables Library</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <a href="options.html" class="ghost">Settings</a>
+        <a href="cues_lib.html">Cues Library</a>
+        <a href="cues_crud.html">Cues CRUD</a>
+        <a href="variables_crud.html">Variables CRUD</a>
+      </div>
+      <div class="card">
+        <h2>Variables Library</h2>
+        <div class="row" style="margin-bottom: 8px;">
+          <div class="col">
+            <label>Search</label>
+            <input id="search" type="text" placeholder="Type to filter">
+          </div>
+        </div>
+        <table id="table">
+          <thead><tr><th>ID</th><th>Type</th><th>Default</th><th>Label</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <script type="module" src="variables_lib.js"></script>
+  </body>
+</html>

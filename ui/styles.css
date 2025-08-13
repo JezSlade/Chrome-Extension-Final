@@ -1,41 +1,56 @@
-/* ui/styles.css - minimal glassmorphic theme with system-aware colors */
+/* High contrast elegant theme */
 
 :root {
-  --bg: rgba(255,255,255,0.7);
-  --fg: #111;
-  --muted: #666;
-  --border: rgba(0,0,0,0.1);
-  --accent: #4b8bff;
-  --card: rgba(255,255,255,0.6);
+  --bg: #0f1320;
+  --bg-grad-a: #0f1320;
+  --bg-grad-b: #1d2140;
+  --fg: #f5f7ff;
+  --muted: #c6c9d8;
+  --border: rgba(255,255,255,0.15);
+  --accent: #6aa6ff;
+  --accent-strong: #2f7bff;
+  --card: rgba(255,255,255,0.06);
   --radius: 16px;
-  --blur: 10px;
+  --blur: 14px;
+  --select-bg: #1f2748;
+  --select-fg: #f5f7ff;
+  --select-border: #3a4580;
+  --focus-ring: #96c0ff;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --bg: rgba(20,20,24,0.6);
-    --fg: #f3f3f3;
-    --muted: #bbb;
-    --border: rgba(255,255,255,0.1);
-    --accent: #7aa2ff;
-    --card: rgba(30,30,36,0.55);
+    --bg: #f4f7ff;
+    --bg-grad-a: #f4f7ff;
+    --bg-grad-b: #ffffff;
+    --fg: #0e1330;
+    --muted: #3b3f5a;
+    --border: rgba(0,0,0,0.12);
+    --accent: #2f7bff;
+    --accent-strong: #145dff;
+    --card: rgba(255,255,255,0.75);
+    --select-bg: #ffffff;
+    --select-fg: #0e1330;
+    --select-border: #c7d2fe;
+    --focus-ring: #2f7bff;
   }
 }
 
 * { box-sizing: border-box; }
 
+html, body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--fg);
-  background: linear-gradient(135deg, #b5c7ff 0%, #ffffff 100%);
+  background: linear-gradient(145deg, var(--bg-grad-a), var(--bg-grad-b));
   min-height: 100vh;
 }
 
-.container {
-  width: 100%;
-  padding: 12px;
-}
+.container { width: 100%; padding: 16px; }
 
 .card {
   background: var(--card);
@@ -43,40 +58,60 @@ body {
   border-radius: var(--radius);
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.22);
   padding: 16px;
 }
 
-.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.col { flex: 1 1 auto; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.col { flex: 1 1 280px; }
 
-h1, h2, h3 {
-  margin: 0 0 8px;
-  font-weight: 600;
-}
+h1, h2, h3 { margin: 0 0 10px; font-weight: 650; }
 
 label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 input[type="text"], textarea, select {
   width: 100%;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.5);
-  color: var(--fg);
+  border-radius: 12px;
+  border: 1px solid var(--select-border);
+  background: var(--select-bg);
+  color: var(--select-fg);
   outline: none;
+}
+
+select { appearance: none; }
+
+input[type="text"]:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus-ring) 45%, transparent);
 }
 
 button {
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.6);
+  background: color-mix(in oklab, var(--select-bg) 70%, black);
   color: var(--fg);
   padding: 10px 14px;
   border-radius: 12px;
   cursor: pointer;
 }
+button.primary { background: var(--accent-strong); border-color: transparent; color: #fff; }
+button.ghost { background: transparent; }
 
-button.primary {
-  background: var(--accent);
-  color: white;
-  border-color: transparent;
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+tr:hover { background: rgba(255,255,255,0.06); }
+
+.nav {
+  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
 }
+.nav a, .nav button.linkish {
+  text-decoration: none; color: #fff; padding: 8px 12px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+}
+.nav a.ghost, .nav button.linkish.ghost {
+  background: transparent; color: var(--fg);
+}
+
+.note { color: var(--muted); font-size: 12px; }
+.toast { position: fixed; right: 16px; bottom: 16px; padding: 10px 12px; border-radius: 10px;
+  background: #17a34a; color: white; }

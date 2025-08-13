@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Cues Library</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <a href="options.html" class="ghost">Settings</a>
+        <a href="cues_crud.html">Cues CRUD</a>
+        <a href="variables_lib.html">Variables Library</a>
+        <a href="variables_crud.html">Variables CRUD</a>
+      </div>
+      <div class="card">
+        <h2>Cues Library</h2>
+        <div class="row" style="margin-bottom: 8px;">
+          <div class="col">
+            <label>Search</label>
+            <input id="search" type="text" placeholder="Type to filter">
+          </div>
+        </div>
+        <table id="table">
+          <thead><tr><th>Enabled</th><th>Trigger</th><th>Template</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="note">Library is read only except for toggling enabled.</div>
+      </div>
+    </div>
+    <script type="module" src="cues_lib.js"></script>
+  </body>
+</html>

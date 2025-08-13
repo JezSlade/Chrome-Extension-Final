@@ -7,6 +7,13 @@
   </head>
   <body>
     <div class="container">
+      <div class="nav">
+        <a href="cues_lib.html">Cues Library</a>
+        <a href="cues_crud.html">Cues CRUD</a>
+        <a href="variables_lib.html">Variables Library</a>
+        <a href="variables_crud.html">Variables CRUD</a>
+      </div>
+
       <div class="card" style="margin-bottom: 16px;">
         <h2>Settings</h2>
         <div class="row">
@@ -30,46 +37,16 @@
             </select>
           </div>
         </div>
-      </div>
-
-      <div class="card" style="margin-bottom: 16px;">
-        <h2>Cues</h2>
-        <div class="row" style="margin-bottom: 8px;">
-          <button id="addCue" class="primary">Add Cue</button>
-          <button id="exportData">Export</button>
-          <input id="importFile" type="file" accept="application/json">
-          <button id="importData">Import</button>
-        </div>
-        <table id="cuesTable" style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr>
-              <th>Enabled</th>
-              <th>Trigger</th>
-              <th>Template</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <div class="note" style="margin-top:8px;">Use the navigation to manage libraries and CRUD separately.</div>
       </div>
 
       <div class="card">
-        <h2>Variables</h2>
-        <div class="row" style="margin-bottom: 8px;">
-          <button id="addVar" class="primary">Add Variable</button>
+        <h2>Data</h2>
+        <div class="row">
+          <button id="exportData" class="primary">Export</button>
+          <input id="importFile" type="file" accept="application/json">
+          <button id="importData">Import</button>
         </div>
-        <table id="varsTable" style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Default</th>
-              <th>Label</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
       </div>
     </div>
     <script type="module" src="options.js"></script>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Cues CRUD</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <a href="options.html" class="ghost">Settings</a>
+        <a href="cues_lib.html">Cues Library</a>
+        <a href="variables_lib.html">Variables Library</a>
+        <a href="variables_crud.html">Variables CRUD</a>
+      </div>
+      <div class="card">
+        <h2>Cues CRUD</h2>
+        <div class="row" style="margin-bottom: 8px;">
+          <button id="add" class="primary">Add Cue</button>
+        </div>
+        <table id="table">
+          <thead><tr><th>Enabled</th><th>Trigger</th><th>Template</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <script type="module" src="cues_crud.js"></script>
+  </body>
+</html>

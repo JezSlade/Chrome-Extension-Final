@@ -1,33 +1,21 @@
-// background.js - MV3 service worker
-// State, sync, and message RPCs. No inline code anywhere.
-
 import { Storage } from "./js/storage.js";
 import { DEFAULT_STATE, SCHEMA_VERSION } from "./js/schema.js";
 
-const storage = new Storage({
-  area: 'sync', // mission critical sync
-  schemaVersion: SCHEMA_VERSION,
-  defaults: DEFAULT_STATE
-});
+const storage = new Storage({ area: 'sync', schemaVersion: SCHEMA_VERSION, defaults: DEFAULT_STATE });
 
-chrome.runtime.onInstalled.addListener(async (details) => {
-  // Ensure defaults on install or update without stomping user data.
+chrome.runtime.onInstalled.addListener(async () => {
   const state = await storage.getState();
   if (!state || !state._meta || state._meta.schemaVersion !== SCHEMA_VERSION) {
     await storage.migrateOrInit();
   }
-  // Context menu for quick add if desired later.
-  // Disabled by default to keep permissions lean.
 });
 
-// Central message router for UI and content
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       switch (msg.type) {
         case 'GET_STATE': {
-          const s = await storage.getState();
-          sendResponse({ ok: true, state: s });
+          sendResponse({ ok: true, state: await storage.getState() });
           break;
         }
         case 'SET_STATE': {
@@ -36,8 +24,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           break;
         }
         case 'EXPORT_DATA': {
-          const exportBlob = await storage.exportData();
-          sendResponse({ ok: true, data: exportBlob });
+          sendResponse({ ok: true, data: await storage.exportData() });
           break;
         }
         case 'IMPORT_DATA': {
@@ -45,23 +32,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           sendResponse({ ok: true });
           break;
         }
-        case 'PING': {
-          sendResponse({ ok: true, pong: true });
-          break;
-        }
         default:
           sendResponse({ ok: false, error: 'Unknown message type' });
       }
-    } catch (err) {
-      sendResponse({ ok: false, error: String(err) });
+    } catch (e) {
+      sendResponse({ ok: false, error: String(e) });
     }
   })();
-  return true; // async response
+  return true;
 });
 
-// Sync change mirror to tabs that have content.js active
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName !== storage.area) return;
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync') return;
   chrome.tabs.query({}, (tabs) => {
     for (const t of tabs) {
       chrome.tabs.sendMessage(t.id, { type: 'STATE_CHANGED' }).catch(() => {});
