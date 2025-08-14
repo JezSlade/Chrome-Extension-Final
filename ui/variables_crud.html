@@ -15,15 +15,32 @@
       </div>
       <div class="card">
         <h2>Variables CRUD</h2>
+        <div class="note" style="margin-bottom:8px;">
+          Use the variable id in Cues as {{variableId}}. Creation and Edit run inside a Dynamic Step Form Wizard Modal.
+        </div>
         <div class="row" style="margin-bottom: 8px;">
-          <button id="add" class="primary">Add Variable</button>
+          <button id="add" class="primary">Create Variable</button>
         </div>
         <table id="table">
-          <thead><tr><th>ID</th><th>Type</th><th>Default</th><th>Label</th><th>Actions</th></tr></thead>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Default Content</th>
+              <th>Label</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
+
+    <!-- Legacy modal kept to preserve structure. No longer used. -->
+    <div class="modal-backdrop" id="varWizardBackdrop" aria-hidden="true" style="display:none;"></div>
+
+    <!-- Your Step Wizard library -->
+    <script src="step_form_wizard.js"></script>
     <script type="module" src="variables_crud.js"></script>
   </body>
 </html>

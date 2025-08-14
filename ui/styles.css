@@ -38,9 +38,7 @@
 
 * { box-sizing: border-box; }
 
-html, body {
-  height: 100%;
-}
+html, body { height: 100%; }
 
 body {
   margin: 0;
@@ -68,7 +66,7 @@ body {
 h1, h2, h3 { margin: 0 0 10px; font-weight: 650; }
 
 label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-input[type="text"], textarea, select {
+input[type="text"], input[type="url"], input[type="email"], input[type="number"], input[type="color"], textarea, select {
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
@@ -80,14 +78,14 @@ input[type="text"], textarea, select {
 
 select { appearance: none; }
 
-input[type="text"]:focus, textarea:focus, select:focus {
+input[type="text"]:focus, input[type="url"]:focus, input[type="email"]:focus, input[type="number"]:focus, input[type="color"]:focus, textarea:focus, select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus-ring) 45%, transparent);
+  box-shadow: 0 0 0 3px rgba(150,192,255,0.45);
 }
 
 button {
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--select-bg) 70%, black);
+  background: rgba(31,39,72,0.7);
   color: var(--fg);
   padding: 10px 14px;
   border-radius: 12px;
@@ -100,18 +98,78 @@ table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
 tr:hover { background: rgba(255,255,255,0.06); }
 
-.nav {
-  display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
-}
+.nav { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .nav a, .nav button.linkish {
   text-decoration: none; color: #fff; padding: 8px 12px; border-radius: 10px;
   border: 1px solid var(--border);
   background: linear-gradient(180deg, var(--accent), var(--accent-strong));
 }
-.nav a.ghost, .nav button.linkish.ghost {
-  background: transparent; color: var(--fg);
-}
+.nav a.ghost, .nav button.linkish.ghost { background: transparent; color: var(--fg); }
 
 .note { color: var(--muted); font-size: 12px; }
-.toast { position: fixed; right: 16px; bottom: 16px; padding: 10px 12px; border-radius: 10px;
-  background: #17a34a; color: white; }
+.toast { position: fixed; right: 16px; bottom: 16px; padding: 10px 12px; border-radius: 10px; background: #17a34a; color: white; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: none; align-items: center; justify-content: center; z-index: 9999;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  width: min(920px, 96vw); max-height: 90vh; overflow: auto;
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+}
+.modal .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.modal .modal-title { font-size: 18px; font-weight: 650; }
+.modal .actions { display: flex; gap: 8px; }
+.modal .help { color: var(--muted); font-size: 12px; margin: 8px 0 12px; }
+.modal .field { margin: 10px 0; }
+.modal .pill {
+  display: inline-block; margin: 4px 6px 0 0; padding: 6px 10px; border-radius: 999px;
+  background: var(--select-bg); border: 1px solid var(--select-border); cursor: pointer; user-select: none;
+}
+.modal .pill:hover { border-color: var(--accent); }
+
+/* Toolbar */
+.toolbar { display: flex; gap: 6px; margin: 6px 0 8px; flex-wrap: wrap; }
+.toolbar button { padding: 6px 10px; border-radius: 8px; }
+.editor-stack textarea { width: 100%; }
+
+/* =========================
+   Wizard modal compatibility
+   ========================= */
+.sfw, .sfw-modal, .wizard, .wizard-modal, .step-form-wizard {
+  /* ensure wizard containers appear above page content */
+  z-index: 10000;
+}
+
+.sfw-modal select,
+.sfw select,
+.step-form-wizard select,
+.wizard select,
+.wizard-modal select {
+  display: block !important;
+  width: 100% !important;
+  min-height: 36px !important;
+  background: var(--select-bg) !important;
+  color: var(--select-fg) !important;
+  border: 1px solid var(--select-border) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  appearance: auto !important; /* allow native rendering if the wizard tried to hide it */
+}
+
+/* Some wizard libraries render dropdown overlays. Keep them above the modal. */
+.sfw-dropdown,
+.sfw-options,
+.step-form-wizard-dropdown {
+  z-index: 10001;
+}
+
+/* Fallback: if any wizard step hides overflowing content, allow the form controls to be visible */
+.sfw-modal .sfw-step,
+.wizard-modal .wizard-step,
+.step-form-wizard .step {
+  overflow: visible;
+}
