@@ -151,46 +151,85 @@ User Interface
 [ ] Follow modern UI/UX principles to create a clean, intuitive, and responsive design.
 
 
+# Here's a mapping of variable types to appropriate UI pickers/controls in JavaScript, HTML, and CSS:
 
-# Variable Types
-Input Fields & Variables
+### **Input Fields & Variables**
+- **[ ] Text Variables**  
+  - **Picker**: `<input type="text">` (Single-line text field)  
+  - **Advanced**: Rich text editor (e.g., TinyMCE, Quill) for formatted text.
 
-[ ] Text Variables: For inserting text strings like names, topics, or stock tickers.
+- **[ ] Custom Variables**  
+  - **Picker**: `<input type="text">` with autocomplete or a custom variable selector (like a dropdown + "+ Add" button).
 
-[ ] Custom Variables: User-defined variables that can be used and reused across snippets.
+- **[ ] Numerical Variables**  
+  - **Picker**: `<input type="number">` (for integers/decimals)  
+  - **Range Picker**: `<input type="range">` (for sliders)  
+  - **Advanced**: Numeric stepper (with +/- buttons).
 
-[ ] Numerical Variables: For defining quantities, ranges, or time horizons (e.g., word count, number of days).
+- **[ ] Document Variables**  
+  - **Picker**: `<textarea>` (Multi-line text)  
+  - **File Upload**: `<input type="file">` (for document uploads)  
+  - **Advanced**: Drag-and-drop file uploader or Markdown editor.
 
-[ ] Document Variables: For injecting large blocks of text or entire documents for analysis.
+---
 
-Selection & Control
+### **Selection & Control**
+- **[ ] Drop-down Menus**  
+  - **Picker**: `<select>` with `<option>` elements.  
+  - **Enhanced**: Custom dropdowns (Select2, React Select).
 
-[ ] Drop-down Menus: To select a single predefined option from a list (e.g., tone, output format, model selection).
+- **[ ] Checkboxes**  
+  - **Picker**: `<input type="checkbox">`  
+  - **Toggle Switch**: `<input type="checkbox" class="toggle-switch">` (styled with CSS).
 
-[ ] Checkboxes: To include or exclude specific sections, instructions, or features.
+- **[ ] Multi-select Lists**  
+  - **Picker**: `<select multiple>` (HTML native)  
+  - **Enhanced**: Multi-select component (e.g., Chosen, React MultiSelect).
 
-[ ] Multi-select Lists: To choose multiple predefined options (e.g., a list of technical indicators).
+- **[ ] Boolean Toggles**  
+  - **Picker**: `<input type="checkbox" role="switch">` (HTML5 switch)  
+  - **Custom**: Toggle switches (CSS-styled).
 
-[ ] Boolean Toggles: A simple true/false switch to enable or disable a specific feature or constraint.
+---
 
-Dynamic & Automated Content
+### **Dynamic & Automated Content**
+- **[ ] Dynamic Placeholders**  
+  - **Picker**: Predefined dropdown with dynamic options (e.g., `{{DATE}}`, `{{CLIPBOARD}}`).  
+  - **Auto-insert**: Button to inject dynamic content.
 
-[ ] Dynamic Placeholders: Automatically insert real-time data like dates, times, and clipboard content.
+- **[ ] Date and Time Arithmetic**  
+  - **Picker**: Date picker (`<input type="date">`) + dropdown for operations (e.g., "+7 days").  
+  - **Advanced**: Date-fns or Moment.js integration for calculations.
 
-[ ] Date and Time Arithmetic: To calculate and insert dates in the past or future.
+- **[ ] Mathematical Expressions**  
+  - **Picker**: Math input field (e.g., `eval()`-based calculator).  
+  - **Advanced**: Math.js integration for safe evaluation.
 
-[ ] Mathematical Expressions: To perform simple calculations within a snippet.
+- **[ ] Executable Scripts**  
+  - **Picker**: Code editor (e.g., Monaco, CodeMirror) for JavaScript/Python.  
+  - **Run Button**: To execute scripts on demand.
 
-[ ] Executable Scripts: To run JavaScript or other scripts for advanced automation.
+---
 
-Specialized Variables
+### **Specialized Variables**
+- **[ ] Instructional Variables**  
+  - **Picker**: Dropdown or tagged input (like GitHub labels) for AI commands.
 
-[ ] Instructional Variables: For swapping in different AI commands (e.g., "summarize," "critique").
+- **[ ] Timeframe Variables**  
+  - **Picker**: Dual date pickers (`<input type="date">` for start/end dates).  
+  - **Advanced**: Calendar range picker (e.g., Flatpickr range).
 
-[ ] Timeframe Variables: To define a specific date range (e.g., start and end dates) for data analysis.
+- **[ ] Filtering Criteria**  
+  - **Picker**: Combination of dropdowns, checkboxes, and input fields in a filter panel.  
+  - **Advanced**: Dynamic query builder (e.g., jQuery QueryBuilder).
 
-[ ] Filtering Criteria: A combination of variables to screen and filter data based on specific criteria.
+---
 
+### **Additional Specialized Pickers**
+- **Color Variables** → `<input type="color">` (Color picker)  
+- **File Uploads** → `<input type="file">` (Drag-and-drop zone for better UX)  
+- **Rich Text** → WYSIWYG editor (TinyMCE, CKEditor)  
+- **Time Input** → `<input type="time">` (Time picker)  
 
 # Extension Components
 Popup: This is a very common UI component, as it provides a quick and easy way for users to interact with an extension.
